@@ -141,10 +141,22 @@ select {
 }
 .hint-s { font-size: 12.5px; color: var(--muted); }
 .roles { display: grid; gap: 0; }
-.role { display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
-.role label { font-size: 14px; }
-.role label small { display: block; font-size: 12px; color: var(--muted); }
-.role select { padding: 6px 8px; }
+.role { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 6px 16px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.role-name { font-size: 14px; font-weight: 500; }
+.role-name small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
+.rchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.rchips .or { font-size: 12px; color: var(--muted); margin: 0 2px; }
+.rc {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 4px 10px; font-size: 13px; cursor: pointer; color: var(--ink);
+}
+.rc svg { width: 13px; height: 13px; flex: none; }
+.rc:hover:not(:disabled) { border-color: var(--ink); }
+.rc[aria-pressed="true"].sep { background: var(--route-soft); border-color: var(--route); color: var(--route); font-weight: 600; }
+.rc[aria-pressed="true"].by { background: var(--target-soft); border-color: var(--target); color: var(--target); font-weight: 600; }
+.rc:disabled { opacity: .4; cursor: not-allowed; }
+.tlink { color: var(--ref); }
+.team { scroll-margin-top: 16px; }
 .field .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); padding: 8px 0; cursor: pointer; }
 .toggle input { width: 18px; height: 18px; accent-color: var(--route); }
 
@@ -331,7 +343,7 @@ select {
 @media (max-width: 720px) {
   .route { padding: 18px 16px; }
   .context { grid-template-columns: minmax(0, 1fr); }
-  .role { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .role { grid-template-columns: minmax(0, 1fr); }
   .q { grid-template-columns: minmax(0, 1fr); }
   .rng { flex: 1; width: auto; min-width: 0; }
   .g-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
@@ -360,19 +372,6 @@ select {
 
   <div class="work">
     <section class="quiz" aria-label="Опросник">
-      <div class="team">
-        <div class="team-head">
-          <h2>Команда</h2>
-          <p>Важно не число людей, а какие роли в команде есть и сколько часов она отрабатывает в месяц.</p>
-        </div>
-        <div class="field hours">
-          <label for="hours">Трудозатраты команды, часов в месяц</label>
-          <input type="number" id="hours" min="0" step="50" inputmode="numeric">
-          <span class="hint-s" id="hoursHint"></span>
-        </div>
-        <div class="roles" id="roles"></div>
-      </div>
-
       <div class="sample" id="sampleNote">
         <span>Показан пример ответов типичной команды. Замените их на свои.</span>
         <button class="btn" id="resetBtn" type="button">Очистить ответы</button>
@@ -383,6 +382,19 @@ select {
       </div>
 
       <div id="levels" class="quiz"></div>
+
+      <div class="team" id="team">
+        <div class="team-head">
+          <h2>Команда</h2>
+          <p>Важно не число людей, а какие роли закрыты отдельным человеком, а какие кто-то совмещает, и сколько часов команда отрабатывает в месяц. Это уточняет сроки дорожной карты.</p>
+        </div>
+        <div class="field hours">
+          <label for="hours">Трудозатраты команды, часов в месяц</label>
+          <input type="number" id="hours" min="0" step="50" inputmode="numeric">
+          <span class="hint-s" id="hoursHint"></span>
+        </div>
+        <div class="roles" id="roles"></div>
+      </div>
     </section>
 
     <aside class="plan" aria-label="Дорожная карта">
@@ -668,24 +680,49 @@ select {
     answers: { trk: 0.8, kb: 0.6, repo: 1, repotask: 0.4, accept: 0.25, devdb: 0.5, testdb: 1, cfgdev: 1, rel: 0.7, prod: 0.8,
                edt: 0.2, build: 0.25, lint: 0, deliver: 0, rollout: 0.25, protect: 0.25,
                review: 0.4, tests: 0, hist: 0.3, errpipe: 0, erruser: 0.25, aiint: 0, aisec: 0, aiproc: 0, spec: 0, effect: 0.25, aisupport: 0 },
-    roles: { lead: "sep", analyst: "comb", tester: "comb", devops: "none", support: "sep", rm: "comb" },
+    roles: { lead: "sep", analyst: "lead", tester: "analyst", devops: "lead", support: "sep", rm: "lead" },
     hours: 1200, target: 6, sample: true
   };
-  // Роли: отдельный человек, роль совмещает кто-то другой, роли нет. Совмещение и отсутствие удлиняют шаги,
-  // на которые роль влияет, а работа ложится на тех, кто совмещает
+  // Роль либо закрыта отдельным человеком, либо её совмещает другая роль. Кто кого может заменить — by:
+  // разработчик может взять на себя работу аналитика, а аналитик разработчика — нет. Значение в by —
+  // насколько замена слабая: 0 — обычная, 1 — слабая (больше надбавка к сроку). step — надбавка к шагам
+  // дорожной карты [обычная замена, слабая]. Разработчик в команде есть всегда, поэтому сам в списке не выбирается
   var ROLES = [
-    { id: "lead", l: "Ведущий разработчик, архитектор", h: "проектирует решения, ведёт переход и ИИ-разработку", step: { 4: [0.15, 0.3], 5: [0.1, 0.2] } },
-    { id: "analyst", l: "Аналитик", h: "постановки и критерии приёмки", step: { 1: [0.1, 0.2], 3: [0.1, 0.2] } },
-    { id: "tester", l: "Тестировщик", h: "тестирование, автотесты, приёмка", step: { 3: [0.2, 0.35] } },
-    { id: "devops", l: "Инженер сборки и выкладки", h: "конвейер, стенды, выкладка релизов", step: { 2: [0.15, 0.3] } },
-    { id: "support", l: "Поддержка пользователей", h: "обращения и разбор ошибок", step: { 5: [0.1, 0.15] } },
-    { id: "rm", l: "Руководитель или релиз-менеджер", h: "приоритеты, релизы, согласование выкладки", step: { 2: [0.05, 0.15], 3: [0.05, 0.1] } }
+    { id: "lead", l: "Ведущий разработчик, архитектор", sh: "ведущий", h: "проектирует решения, ведёт переход и ИИ-разработку",
+      by: { dev: 1 }, step: { 4: [0.15, 0.3], 5: [0.1, 0.2] } },
+    { id: "analyst", l: "Аналитик", sh: "аналитик", h: "постановки и критерии приёмки",
+      by: { lead: 0, rm: 0, dev: 1 }, step: { 1: [0.1, 0.2], 3: [0.1, 0.2] } },
+    { id: "tester", l: "Тестировщик", sh: "тестировщик", h: "тестирование, автотесты, приёмка",
+      by: { analyst: 0, support: 0, lead: 1, dev: 1 }, step: { 3: [0.2, 0.35] } },
+    { id: "devops", l: "Инженер сборки и выкладки", sh: "инженер сборки", h: "конвейер, стенды, выкладка релизов",
+      by: { lead: 0, dev: 1 }, step: { 2: [0.15, 0.3] } },
+    { id: "support", l: "Поддержка пользователей", sh: "поддержка", h: "обращения и разбор ошибок",
+      by: { analyst: 0, tester: 0, dev: 1 }, step: { 5: [0.1, 0.15] } },
+    { id: "rm", l: "Руководитель или релиз-менеджер", sh: "руководитель", h: "приоритеты, релизы, согласование выкладки",
+      by: { lead: 0, analyst: 0 }, step: { 2: [0.05, 0.15], 3: [0.05, 0.1] } }
   ];
-  var ROLE_STATE = { sep: "есть отдельно", comb: "совмещается", none: "нет" };
+  var ROLE_BY_ID = { dev: { id: "dev", sh: "разработчик" } };
+  ROLES.forEach(function (r) { ROLE_BY_ID[r.id] = r; });
+  var PERSON = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5" r="3" fill="currentColor"/><path d="M2 15c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5z" fill="currentColor"/></svg>';
+  function roleOf(id) { var v = (state.roles || {})[id]; return v && (v === "sep" || ROLE_BY_ID[v]) ? v : "sep"; }
+  // Кто в итоге выполняет роль: идём по цепочке совмещений до отдельного человека или разработчика
+  function roleFinal(id) {
+    var seen = {}, cur = id;
+    while (cur !== "dev" && roleOf(cur) !== "sep") {
+      if (seen[cur]) return "dev";
+      seen[cur] = 1;
+      cur = roleOf(cur);
+    }
+    return cur;
+  }
+  function roleText(id) {
+    var v = roleOf(id);
+    return v === "sep" ? "отдельный человек" : "совмещает " + ROLE_BY_ID[v].sh;
+  }
   // Объём команды в часах в месяц: от него зависит, сколько длится раскатка практик на всех
   function volumeFactor(h) { return !h ? 1 : h <= 500 ? 0.8 : h <= 1500 ? 1 : h <= 4000 ? 1.3 : 1.6; }
   var THRESHOLD = 0.75;
-  var KEY = "maturity-1c-v19";
+  var KEY = "maturity-1c-v20";
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   var state = clone(SAMPLE);
@@ -769,16 +806,26 @@ select {
 
   function buildRoles() {
     $("roles").innerHTML = ROLES.map(function (r) {
-      return '<div class="role"><label for="role-' + r.id + '">' + r.l + '<small>' + r.h + '</small></label>' +
-        '<select id="role-' + r.id + '">' + Object.keys(ROLE_STATE).map(function (k) {
-          return '<option value="' + k + '">' + ROLE_STATE[k] + '</option>';
-        }).join("") + '</select></div>';
+      var by = Object.keys(r.by).map(function (c) {
+        return '<button type="button" class="rc by" data-role="' + r.id + '" data-val="' + c + '">' + ROLE_BY_ID[c].sh + '</button>';
+      }).join("");
+      return '<div class="role" role="group" aria-label="' + r.l + '"><div class="role-name">' + r.l + '<small>' + r.h + '</small></div>' +
+        '<div class="rchips"><button type="button" class="rc sep" data-role="' + r.id + '" data-val="sep">' + PERSON + 'отдельный человек</button>' +
+        '<span class="or">или совмещает</span>' + by + '</div></div>';
     }).join("");
+  }
+  function refreshRoles() {
+    $("roles").querySelectorAll("button.rc").forEach(function (b) {
+      var role = b.dataset.role, val = b.dataset.val;
+      b.setAttribute("aria-pressed", String(roleOf(role) === val));
+      // Нельзя выбрать роль, которую саму совмещает эта: получился бы круг
+      b.disabled = val !== "sep" && val !== "dev" && roleOf(val) === role;
+    });
   }
 
   function syncControls() {
     $("hours").value = state.hours || "";
-    ROLES.forEach(function (r) { $("role-" + r.id).value = (state.roles || {})[r.id] || "sep"; });
+    refreshRoles();
     $("sampleNote").hidden = !state.sample;
     $("emptyNote").hidden = state.sample || Object.keys(state.answers).length > 0;
   }
@@ -837,10 +884,10 @@ select {
     var roleAdd = function (n) {
       var add = 0, why = [];
       ROLES.forEach(function (r) {
-        var k = roles[r.id] === "comb" ? 0 : roles[r.id] === "none" ? 1 : -1;
-        if (k < 0 || !r.step[n]) return;
+        if (roleOf(r.id) === "sep" || !r.step[n]) return;
+        var fin = roleFinal(r.id), k = r.by[fin] === 0 ? 0 : 1;
         add += r.step[n][k];
-        why.push(r.l.toLowerCase() + " — " + ROLE_STATE[roles[r.id]]);
+        why.push(r.sh + " — " + roleText(r.id));
       });
       return { f: 1 + add, why: why };
     };
@@ -880,7 +927,7 @@ select {
           n: 2, title: "Подготовка базы", min: pmin, max: pmax, firm: false,
           about: "Заводим базовые инструменты и вводим правила: базы разработчиков создаются из шаблонной, общая тестовая база подключена к тестовому контуру. Переводим первых разработчиков в 1С:EDT и Git, настраиваем первый конвейер. Строим на инструментах, которые уже есть у команды.",
           tasks: gaps(function (q) { return prepLv.indexOf(q.lv) >= 0; })
-            .concat(roles.devops === "sep" ? [] : [{ text: "Назначить ответственного за конвейер сборки и выкладки" }])
+            .concat(roleOf("devops") === "sep" ? [] : [{ text: "Назначить ответственного за конвейер сборки и выкладки" }])
         });
       }
 
@@ -889,7 +936,7 @@ select {
           n: 3, title: "Проверка на реальных задачах", min: 4 * g(score[5]) * m, max: 8 * g(score[5]) * m,
           about: "Запускаем новый процесс на текущих задачах, например на очередном релизе. Каждое изменение проходит ревью, автотесты и приёмку заказчиком до выпуска.",
           tasks: gaps(function (q) { return q.lv === 5; })
-            .concat(roles.tester === "sep" ? [] : [{ text: "Определить, кто отвечает за тестирование и приёмку, и заложить это в его загрузку" }])
+            .concat(roleOf("tester") === "sep" ? [] : [{ text: "Определить, кто отвечает за тестирование и приёмку, и заложить это в его загрузку" }])
         });
       } else if (prepLv.length) {
         steps.push({
@@ -1046,11 +1093,11 @@ select {
     } else if (done) {
       al += '<div class="alert calm"><b>Цель уже достигнута.</b> Выберите на схеме следующий этап, чтобы увидеть путь к нему.</div>';
     }
-    var rolesNot = ROLES.filter(function (r) { return (state.roles || {})[r.id] && state.roles[r.id] !== "sep"; });
+    var rolesNot = ROLES.filter(function (r) { return roleOf(r.id) !== "sep"; });
     if (rolesNot.length && !done && R.target !== 0) {
-      al += '<div class="alert"><b>Роли без отдельного человека:</b> ' + rolesNot.map(function (r) {
-        return r.l.toLowerCase() + ' (' + ROLE_STATE[state.roles[r.id]] + ')';
-      }).join(", ") + '. Сроки связанных шагов увеличены, а эта работа ляжет на тех, кто совмещает роли.</div>';
+      al += '<div class="alert"><b>Совмещённые роли:</b> ' + rolesNot.map(function (r) {
+        return r.sh + ' — ' + roleText(r.id);
+      }).join(", ") + '. Сроки связанных шагов увеличены, а эта работа ляжет на тех, кто совмещает. <a class="tlink" href="#team">Уточнить роли</a></div>';
     }
     $("alerts").innerHTML = al;
     var h = Number(state.hours) || 0;
@@ -1110,7 +1157,7 @@ select {
       "Цель: этап " + R.target + " · " + LEVELS[R.target].name,
       "Общая зрелость: " + R.index + " из 100 баллов",
       "Команда: " + (state.hours ? state.hours + " ч/мес; " : "") + ROLES.map(function (r) {
-        return r.l.toLowerCase() + " — " + ROLE_STATE[(state.roles || {})[r.id] || "sep"];
+        return r.sh + " — " + roleText(r.id);
       }).join("; ")];
     if (!R.steps.length) { lines.push("Цель уже достигнута."); return lines.join("\n"); }
     lines.push("Срок: " + weeks(d.tMin, d.tMax) + " (" + months(d.tMin, d.tMax) + ")", "");
@@ -1176,12 +1223,12 @@ select {
     save(); render();
   });
   $("hours").addEventListener("input", function () { state.hours = Math.max(0, Number(this.value) || 0); save(); render(); });
-  $("roles").addEventListener("change", function (e) {
-    var t = e.target;
-    if (!t.id || t.id.indexOf("role-") !== 0) return;
+  $("roles").addEventListener("click", function (e) {
+    var b = e.target.closest("button.rc");
+    if (!b || b.disabled) return;
     state.roles = state.roles || {};
-    state.roles[t.id.slice(5)] = t.value;
-    save(); render();
+    state.roles[b.dataset.role] = b.dataset.val;
+    save(); refreshRoles(); render();
   });
   $("resetBtn").addEventListener("click", function () {
     state = { answers: {}, roles: state.roles, hours: state.hours, target: state.target, sample: false };
