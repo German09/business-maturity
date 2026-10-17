@@ -209,7 +209,7 @@ select {
 .q + .q { border-top: 1px solid var(--line); }
 .qd summary { list-style: none; cursor: pointer; display: grid; gap: 3px; }
 .qd[open] { grid-column: 1 / -1; grid-row: 1; }
-.qd[open] summary { padding-right: 300px; }
+.qd[open] summary { padding-right: 290px; }
 .q .sl { grid-column: 2; grid-row: 1; align-self: start; position: relative; }
 .qd summary::-webkit-details-marker { display: none; }
 .qtitle { font-size: 14.5px; display: flex; gap: 8px; align-items: baseline; }
@@ -263,6 +263,7 @@ select {
 .lrq.ok i { color: var(--route); }
 .lrq.no i { color: var(--target); }
 .lrq.ok .ref { color: var(--muted); }
+.lrq .ref { white-space: normal; }
 .lrq-n { color: var(--muted); }
 .ladder button.blocked { opacity: .5; }
 .sl output { font-family: var(--font-mono); font-size: 13px; font-weight: 600; min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
@@ -1094,7 +1095,8 @@ select {
       });
     }
 
-    var aheadAI = current < 4 && eff.aiint > 0;
+    // Агент, который правит конфигурацию (6.1, шаг 3 и дальше), без конвейера и ревью — рано
+    var aheadAI = current < 4 && eff.aiint >= 0.5 - 1e-9;
     var ahead = [];
     for (var h = current + 2; h <= MAXL; h++) if (score[h] > 0) ahead.push(h);
 
@@ -1228,7 +1230,7 @@ select {
     // Предупреждения
     var al = "";
     if (R.aheadAI) {
-      al += '<div class="alert"><b>ИИ раньше процесса.</b> Команда уже пробует ИИ, но нет конвейера и ревью. Без них эффект не закрепится: сначала стабилизируем процесс, затем подключаем ИИ.</div>';
+      al += '<div class="alert"><b>ИИ раньше процесса.</b> Агент уже правит конфигурацию, но нет конвейера и ревью. Без них эффект не закрепится: сначала стабилизируем процесс, затем подключаем ИИ.</div>';
     } else if (R.ahead.length) {
       al += '<div class="alert"><b>Практики через этап.</b> Часть практик этапа ' + R.ahead.join(", ") + ' уже есть, но предыдущие этапы не закрыты. Их учтём в сроках.</div>';
     }
