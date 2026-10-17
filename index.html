@@ -85,15 +85,21 @@ button { font: inherit; color: inherit; }
 .fact .v small { font-family: var(--font-body); font-size: 14px; color: var(--muted); font-weight: 400; }
 .fact.now .v { color: var(--route); }
 .fact.goal .v { color: var(--target); }
-.fact.bal { gap: 4px; min-width: 220px; }
-.balrow { display: flex; align-items: center; gap: 8px; }
-.balbar { width: 110px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; flex: none; }
-.balbar i { display: block; height: 100%; }
+.balance { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 16px; }
+.balcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
+.balcol { display: grid; gap: 6px; min-width: 0; }
+.baltitle { font-size: 13px; font-weight: 600; }
+.balrow { display: grid; grid-template-columns: 130px minmax(0, 1fr) 44px; gap: 10px; align-items: center; }
+.balname { font-size: 12.5px; color: var(--muted); }
+.balbar { position: relative; height: 8px; border-radius: 4px; background: var(--line); }
+.balbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
 .balbar i.p { background: var(--ref); }
 .balbar i.c { background: var(--route); }
-.baln { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.balbar .lim { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+.baln { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .balst { font-size: 12.5px; color: var(--route); font-weight: 600; }
-.fact.bal.warn .balst { color: var(--warn); }
+.balcol.warn .balst { color: var(--warn); }
+.balnote { font-size: 12.5px; color: var(--muted); max-width: 90ch; }
 
 .stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
 .st { position: relative; min-width: 0; }
@@ -351,6 +357,8 @@ select {
 }
 @media (max-width: 720px) {
   .route { padding: 18px 16px; }
+  .balcols { grid-template-columns: minmax(0, 1fr); }
+  .balrow { grid-template-columns: 110px minmax(0, 1fr) 40px; }
   .context { grid-template-columns: minmax(0, 1fr); }
   .role { grid-template-columns: minmax(0, 1fr); }
   .q { grid-template-columns: minmax(0, 1fr); }
@@ -376,6 +384,7 @@ select {
   <section class="route" aria-label="Карта зрелости">
     <div class="summary" id="summary"></div>
     <ol class="stations" id="stations"></ol>
+    <div class="balance" id="balance"></div>
     <p class="hint"><b>Цель выбирается на схеме:</b> нажмите на этап, до которого хотите дойти.</p>
   </section>
 
@@ -431,7 +440,7 @@ select {
     <p>Ползунок показывает, насколько практика выполнена: от 0 до 100%. Вес практики — её доля в общей зрелости, сумма весов равна 100. Практика даёт баллы пропорционально проценту выполнения. Больше весят практики, на которые опираются следующие этапы: Git, автосборка, статический анализ, код-ревью.</p>
     <p>Риска на ползунке — веха: после неё пункт открывает следующие практики. Пока веха не пройдена, полоса оранжевая, после — зелёная. У пошаговых пунктов вехи стоят на тех шагах, которые что-то открывают.</p>
     <p>Некоторые практики невозможны без других: например, автосборка без Git. Такой пункт заблокирован и не даёт баллов, пока нужные практики не выполнены хотя бы на 50%, а переход на EDT и Git не дошёл до нужного шага. Откройте описание пункта, чтобы увидеть, что он требует и что открывает.</p>
-    <p>Баланс «мощность ИИ ↔ управляемость» сравнивает, насколько ИИ уже действует в бизнес-решении (агент, поддержка, пользователи, MCP), и насколько команда это контролирует (проверки в конвейере, защита среды, ревью, автотесты, критерии безопасности, правила ИИ-разработки, спецификации, управляемость в темпе ИИ). Если ИИ опережает больше чем на 15 пунктов, бизнес-решение рискует стать неуправляемым.</p>
+    <p>Баланс «применимость ИИ ↔ управляемость» сравнивает, насколько ИИ уже применяется в бизнес-решении (агент, поддержка, пользователи, MCP), и насколько команда это контролирует (проверки в конвейере, защита среды, ревью, автотесты, критерии безопасности, правила ИИ-разработки, спецификации, управляемость в темпе ИИ). Применимость может опережать управляемость не больше чем на 15 пунктов, иначе бизнес-решение рискует стать неуправляемым. Шкала «В цели» показывает баланс, который получится, когда цель будет достигнута.</p>
     <p>Этап считается достигнутым, когда набрано не меньше 75% его баллов (отметка на полосе прогресса) и все предыдущие этапы уже достигнуты.</p>
     <p>Срок аудита (2–4 недели) задан методикой, подготовка базы занимает по ней 4–8 недель, плюс 1–2 недели, если базовых инструментов ещё нет. Сроки следующих шагов ориентировочные: они зависят от того, сколько уже сделано, от объёма команды в часах и от того, какие роли в ней совмещаются, и уточняются на аудите.</p>
   </footer>
@@ -770,8 +779,8 @@ select {
   // Объём команды в часах в месяц: от него зависит, сколько длится раскатка практик на всех
   function volumeFactor(h) { return !h ? 1 : h <= 500 ? 0.8 : h <= 1500 ? 1 : h <= 4000 ? 1.3 : 1.6; }
   var THRESHOLD = 0.75;
-  // Баланс: насколько ИИ уже действует в бизнес-решении и насколько команда это контролирует
-  var POWER = ["aiint", "aisupport", "users", "mcpbiz", "reqfilter"];
+  // Баланс: насколько ИИ уже применяется в бизнес-решении и насколько команда это контролирует
+  var APPLY = ["aiint", "aisupport", "users", "mcpbiz", "reqfilter"];
   var CONTROL = ["lint", "protect", "review", "tests", "aisec", "aiproc", "spec", "archctl"];
   var BALANCE_GAP = 15;
   function share(ids, eff) {
@@ -1120,14 +1129,25 @@ select {
       '<div class="fact"><span class="k">Общая зрелость</span><span class="v">' + R.index + ' <small>из 100 баллов</small></span></div>' +
       '<div class="fact"><span class="k">Путь</span><span class="v">' + (R.target === 0 ? "Стартовая точка" : done ? "Цель достигнута" : weeks(tMin, tMax) + ' <small>' + months(tMin, tMax) + '</small>') + '</span></div>';
 
-    // Баланс ИИ и управляемости
-    var power = share(POWER, R.eff), control = share(CONTROL, R.eff), gap = power - control;
-    var balState = power === 0 ? "ИИ ещё не подключён" : gap > BALANCE_GAP ? "ИИ опережает управляемость" : "в балансе";
-    $("summary").innerHTML += '<div class="fact bal' + (power > 0 && gap > BALANCE_GAP ? ' warn' : '') + '"><span class="k">Мощность ИИ ↔ управляемость</span>' +
-      '<span class="balrow"><span class="balbar"><i class="p" style="width:' + power + '%"></i></span><span class="baln">ИИ ' + power + '%</span></span>' +
-      '<span class="balrow"><span class="balbar"><i class="c" style="width:' + control + '%"></i></span><span class="baln">управляемость ' + control + '%</span></span>' +
-      '<span class="balst">' + balState + '</span></div>';
-    R.balance = { power: power, control: control, gap: gap };
+    // Баланс применимости ИИ и управляемости: сейчас и после достижения цели
+    var tEff = {};
+    QS.forEach(function (q) { tEff[q.id] = q.lv <= R.target ? 1 : (R.eff[q.id] || 0); });
+    var now = { a: share(APPLY, R.eff), c: share(CONTROL, R.eff) };
+    var goal = R.target > R.current ? { a: share(APPLY, tEff), c: share(CONTROL, tEff) } : null;
+    R.balance = { apply: now.a, control: now.c, gap: now.a - now.c };
+    function balCol(title, b) {
+      var lim = Math.min(100, b.c + BALANCE_GAP), over = b.a - b.c > BALANCE_GAP;
+      var st = b.a === 0 ? "ИИ ещё не применяется" : over ? "ИИ опережает управляемость на " + (b.a - b.c - BALANCE_GAP) + " п. сверх допустимого" : "в балансе";
+      return '<div class="balcol' + (over ? ' warn' : '') + '"><span class="baltitle">' + title + '</span>' +
+        '<span class="balrow"><span class="balname">Применимость ИИ</span><span class="balbar"><i class="p" style="width:' + b.a + '%"></i>' +
+        '<b class="lim" style="left:' + lim + '%" title="Граница: управляемость + ' + BALANCE_GAP + ' п."></b></span><span class="baln">' + b.a + '%</span></span>' +
+        '<span class="balrow"><span class="balname">Управляемость</span><span class="balbar"><i class="c" style="width:' + b.c + '%"></i></span><span class="baln">' + b.c + '%</span></span>' +
+        '<span class="balst">' + st + '</span></div>';
+    }
+    $("balance").innerHTML = '<div class="balcols">' + balCol("Сейчас", now) +
+      (goal ? balCol("В цели · этап " + R.target, goal) : '') + '</div>' +
+      '<p class="balnote">Применимость ИИ может опережать управляемость не больше чем на ' + BALANCE_GAP +
+      ' пунктов — граница отмечена риской на шкале. Дальше люди не успевают проверять, что делает ИИ, и бизнес-решение теряет управляемость.</p>';
 
     // Станции
     $("stations").innerHTML = LEVELS.map(function (L) {
@@ -1173,8 +1193,8 @@ select {
         return r.sh + ' — ' + roleText(r.id);
       }).join(", ") + '. Сроки связанных шагов увеличены, а эта работа ляжет на тех, кто совмещает. <a class="tlink" href="#team">Уточнить роли</a></div>';
     }
-    if (R.balance.power > 0 && R.balance.gap > BALANCE_GAP) {
-      al = '<div class="alert"><b>ИИ опережает управляемость.</b> ИИ уже действует на ' + R.balance.power + '%, а управляемость — ' + R.balance.control +
+    if (R.balance.apply > 0 && R.balance.gap > BALANCE_GAP) {
+      al = '<div class="alert"><b>ИИ опережает управляемость.</b> Применимость ИИ — ' + R.balance.apply + '%, а управляемость — ' + R.balance.control +
         '%. Люди перестают успевать проверять, что он меняет, и бизнес-решение теряет управляемость. Подтяните ' + ref("archctl") + ', ' + ref("review") + ' и ' + ref("tests") + '.</div>' + al;
     }
     $("alerts").innerHTML = al;
