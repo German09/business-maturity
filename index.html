@@ -208,6 +208,9 @@ select {
 .q { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: start; padding: 12px 16px; }
 .q + .q { border-top: 1px solid var(--line); }
 .qd summary { list-style: none; cursor: pointer; display: grid; gap: 3px; }
+.qd[open] { grid-column: 1 / -1; grid-row: 1; }
+.qd[open] summary { padding-right: 300px; }
+.q .sl { grid-column: 2; grid-row: 1; align-self: start; position: relative; }
 .qd summary::-webkit-details-marker { display: none; }
 .qtitle { font-size: 14.5px; display: flex; gap: 8px; align-items: baseline; }
 .chev {
@@ -221,7 +224,8 @@ select {
   color: var(--muted); font-variant-numeric: tabular-nums; padding-left: 15px;
 }
 .wt i { display: inline-block; height: 4px; border-radius: 2px; background: var(--muted); opacity: .55; }
-.qdesc { display: grid; gap: 6px; padding: 8px 0 2px 15px; font-size: 13.5px; color: var(--muted); max-width: 68ch; }
+.qdesc { display: grid; gap: 6px; padding: 8px 0 2px 15px; font-size: 13.5px; color: var(--muted); max-width: 92ch; }
+.qdesc > p { max-width: 68ch; }
 .qdesc .rel { font-size: 12.5px; }
 .qdesc .rel b { color: var(--ink); font-weight: 500; }
 
@@ -249,7 +253,17 @@ select {
 }
 .tick.hit { background: var(--route); }
 .q.locked .tick { background: var(--line); }
-.lunl, .lreq { font-size: 12.5px; color: var(--muted); padding: 0 8px 4px 38px; }
+.lunl { font-size: 12.5px; color: var(--muted); padding: 0 8px 4px 38px; }
+.ladder li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px); gap: 0 12px; align-items: start; }
+.lmain { min-width: 0; }
+.lreqs { display: grid; gap: 2px; padding-top: 5px; font-size: 12px; }
+.lrq-h { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.lrq { display: flex; gap: 6px; align-items: baseline; color: var(--muted); }
+.lrq i { font-style: normal; flex: none; width: 12px; }
+.lrq.ok i { color: var(--route); }
+.lrq.no i { color: var(--target); }
+.lrq.ok .ref { color: var(--muted); }
+.lrq-n { color: var(--muted); }
 .ladder button.blocked { opacity: .5; }
 .sl output { font-family: var(--font-mono); font-size: 13px; font-weight: 600; min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
 .q.locked .qtitle { color: var(--muted); }
@@ -363,7 +377,12 @@ select {
   .context { grid-template-columns: minmax(0, 1fr); }
   .role { grid-template-columns: minmax(0, 1fr); }
   .q { grid-template-columns: minmax(0, 1fr); }
+  .qd[open] { grid-column: 1; }
+  .qd[open] summary { padding-right: 0; }
+  .q .sl { grid-column: 1; grid-row: 2; }
   .rng { flex: 1; width: auto; min-width: 0; }
+  .ladder li { grid-template-columns: minmax(0, 1fr); }
+  .lreqs { padding: 0 8px 6px 38px; }
   .g-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .g-axis { margin-left: 0; }
 }
@@ -840,6 +859,10 @@ select {
     var src = BYID[d.id];
     return ref(d.id) + " — " + (src.steps ? "до шага " + d.at + " «" + esc(src.steps[d.at].l) + "»" : "хотя бы на 50%");
   }
+  function reqShort(d) {
+    var src = BYID[d.id];
+    return src.steps ? ref(d.id, d.at) : ref(d.id) + ' <span class="lrq-n">от 50%</span>';
+  }
   function stepIndex(q, v) { return Math.round(v * (q.steps.length - 1)); }
   function unlNames(list) {
     var seen = {};
@@ -861,9 +884,6 @@ select {
       items.forEach(function (q) {
         var rel = "";
         if (q.deps.length) rel += '<p class="rel"><b>Требует:</b> ' + q.deps.map(depText).join("; ") + '</p>';
-        (q.steps || []).forEach(function (st, k) {
-          if (st.req.length) rel += '<p class="rel"><b>Шаг ' + k + ' требует:</b> ' + st.req.map(depText).join("; ") + '</p>';
-        });
         if (q.unl.length && q.steps) {
           rel += '<p class="rel"><b>Открывает:</b> ' + q.miles.map(function (m) {
             var at = Math.round(m * (q.steps.length - 1));
@@ -880,9 +900,9 @@ select {
         var ladder = q.steps ? '<ol class="ladder" id="ld-' + q.id + '">' + q.steps.map(function (st, i) {
           // Ссылки вынесены из кнопки шага: ссылка внутри кнопки не кликается
           var opens = q.unl.filter(function (u) { return u.at === i; });
-          return '<li><button type="button" data-q="' + q.id + '" data-step="' + i + '"><span class="lnum">' + i + '</span><span>' + esc(st.l) + '</span></button>' +
-            (st.req.length ? '<p class="lreq" id="lr-' + q.id + '-' + i + '" hidden></p>' : '') +
-            (opens.length ? '<p class="lunl">открывает ' + unlNames(opens) + '</p>' : '') + '</li>';
+          return '<li><div class="lmain"><button type="button" data-q="' + q.id + '" data-step="' + i + '"><span class="lnum">' + i + '</span><span>' + esc(st.l) + '</span></button>' +
+            (opens.length ? '<p class="lunl">открывает ' + unlNames(opens) + '</p>' : '') + '</div>' +
+            (st.req.length ? '<div class="lreqs" id="lr-' + q.id + '-' + i + '"></div>' : '') + '</li>';
         }).join("") + '</ol>' : '';
         html += '<div class="q" id="q-' + q.id + '">' +
           '<details class="qd"><summary><span class="qtitle" id="ql-' + q.id + '"><span class="chev" aria-hidden="true"></span><span><span class="qnum">' + q.idx + '.</span>' + esc(q.q) + '</span></span>' +
@@ -1115,8 +1135,10 @@ select {
           var note = $("lr-" + q.id + "-" + i);
           if (note) {
             var miss = unmet(q.steps[i].req, R.eff);
-            note.hidden = !miss.length;
-            note.innerHTML = miss.length ? "нужно: " + miss.map(depText).join("; ") : "";
+            note.innerHTML = '<span class="lrq-h">требует</span>' + q.steps[i].req.map(function (d) {
+              var ok = miss.indexOf(d) < 0;
+              return '<span class="lrq ' + (ok ? 'ok' : 'no') + '"><i aria-hidden="true">' + (ok ? '✓' : '○') + '</i>' + reqShort(d) + '</span>';
+            }).join("");
           }
         });
       } else {
