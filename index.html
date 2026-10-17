@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Самодиагностика команды 1С: текущий этап зрелости разработки, путь до цели и сроки по шагам дорожной карты.">
+<style>
+/* Сброс, который на claude.ai добавляет оболочка артефакта */
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Карта зрелости 1С-разработки</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: маршрут-«схема метро» из 7 этапов сверху; ниже две колонки — опросник с ползунками слева, дорожная карта справа (липкая). На узком экране всё в одну колонку. */
+:root {
+  --bg: #F3F5F3;
+  --surface: #FFFFFF;
+  --ink: #15211D;
+  --muted: #5A6A63;
+  --line: #D3DBD7;
+  --route: #0E7A66;
+  --route-soft: #D5EEE7;
+  --target: #B05E08;
+  --target-soft: #F7E5CF;
+  --warn: #A23B1F;
+  --warn-soft: #F7E0D8;
+  --ref: #3557B8;
+  --ref-soft: #E2E8F8;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+    --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+    --warn: #E5826A; --warn-soft: #3A1F18; --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+  --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+  --warn: #E5826A; --warn-soft: #3A1F18; --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.page {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 56px;
+  display: grid; gap: 32px;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; border-radius: 4px; }
+
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.head { display: grid; gap: 12px; max-width: 70ch; }
+.head h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -.01em; }
+.lead { color: var(--muted); font-size: 16px; }
+
+/* ── Маршрут ── */
+.route {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 24px; display: grid; gap: 24px;
+}
+.summary { display: flex; flex-wrap: wrap; gap: 12px 40px; align-items: baseline; }
+.fact { display: grid; gap: 2px; min-width: 0; }
+.fact .k { font-size: 13px; color: var(--muted); }
+.fact .v { font-family: var(--font-display); font-weight: 500; font-size: 20px; line-height: 1.2; }
+.fact .v small { font-family: var(--font-body); font-size: 14px; color: var(--muted); font-weight: 400; }
+.fact.now .v { color: var(--route); }
+.fact.goal .v { color: var(--target); }
+
+.stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.st { position: relative; min-width: 0; }
+.st::before {
+  content: ""; position: absolute; top: 9px; left: 50%; width: 100%; height: 4px;
+  background: var(--line); border-radius: 2px;
+}
+.st:last-child::before { display: none; }
+.st.passed::before { background: var(--route); }
+.st.planned::before { background: repeating-linear-gradient(90deg, var(--target) 0 10px, transparent 10px 16px); }
+.st button {
+  position: relative; width: 100%; background: none; border: 0; padding: 0 6px; cursor: pointer;
+  display: grid; justify-items: center; text-align: center; gap: 6px;
+}
+.dot {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--surface);
+  border: 4px solid var(--line); box-sizing: border-box;
+}
+.st.passed .dot, .st.here .dot { border-color: var(--route); }
+.st.here .dot { background: var(--route); box-shadow: 0 0 0 5px var(--route-soft); }
+.st.planned .dot, .st.goal .dot { border-color: var(--target); }
+.st.goal .dot { background: var(--target); box-shadow: 0 0 0 5px var(--target-soft); }
+.st .code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
+.st .name { font-weight: 600; font-size: 15px; line-height: 1.25; }
+.st .desc { font-size: 12.5px; color: var(--muted); line-height: 1.35; max-width: 22ch; }
+.st button:hover .name { color: var(--target); }
+.meter { width: 70%; max-width: 110px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.meter i, .lmeter i { display: block; height: 100%; background: var(--route); }
+.pct { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; min-height: 22px; }
+.chip { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.here { background: var(--route); color: var(--surface); }
+.chip.goal { background: var(--target); color: var(--surface); }
+.route .hint { font-size: 13px; color: var(--muted); }
+.route .hint b { color: var(--target); font-weight: 600; }
+
+/* ── Рабочая зона ── */
+.work { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 28px; align-items: start; }
+.quiz { display: grid; gap: 20px; min-width: 0; }
+.context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label, .field .lbl { font-size: 13px; color: var(--muted); }
+select {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 100%;
+}
+.team { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 12px; }
+.team-head { display: grid; gap: 2px; }
+.team-head h2 { font-size: 16px; font-weight: 600; }
+.team-head p { font-size: 13px; color: var(--muted); }
+.hours input {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 160px; font-variant-numeric: tabular-nums;
+}
+.hint-s { font-size: 12.5px; color: var(--muted); }
+.roles { display: grid; gap: 0; }
+.role { display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.role label { font-size: 14px; }
+.role label small { display: block; font-size: 12px; color: var(--muted); }
+.role select { padding: 6px 8px; }
+.field .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); padding: 8px 0; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--route); }
+
+.sample {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  background: var(--target-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px;
+}
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+}
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.lvl { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.lvl-head {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+}
+.lvl-head h3 { font-size: 16px; font-weight: 600; }
+.lvl-head h3 .code { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-right: 6px; }
+.lw { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); font-weight: 400; margin-left: 8px; white-space: nowrap; }
+.lvl-prog { flex-basis: 100%; display: flex; align-items: center; gap: 10px; }
+.lmeter { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; position: relative; }
+.lmeter::after { content: ""; position: absolute; top: 0; bottom: 0; left: 75%; border-left: 2px solid var(--surface); }
+.lvl-prog .pct { white-space: nowrap; min-width: 13ch; text-align: right; }
+.status { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.status.done { background: var(--route-soft); color: var(--route); }
+.status.part { background: var(--target-soft); color: var(--target); }
+.status.none { background: var(--bg); color: var(--muted); }
+
+.qs { display: grid; }
+.q { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: start; padding: 12px 16px; }
+.q + .q { border-top: 1px solid var(--line); }
+.qd summary { list-style: none; cursor: pointer; display: grid; gap: 3px; }
+.qd summary::-webkit-details-marker { display: none; }
+.qtitle { font-size: 14.5px; display: flex; gap: 8px; align-items: baseline; }
+.chev {
+  flex: none; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(-45deg) translateY(-2px); transition: transform .15s;
+}
+.qd[open] .chev { transform: rotate(45deg) translateY(-3px); }
+.qd summary:hover .qtitle { color: var(--route); }
+.wt {
+  display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px;
+  color: var(--muted); font-variant-numeric: tabular-nums; padding-left: 15px;
+}
+.wt i { display: inline-block; height: 4px; border-radius: 2px; background: var(--muted); opacity: .55; }
+.qdesc { display: grid; gap: 6px; padding: 8px 0 2px 15px; font-size: 13.5px; color: var(--muted); max-width: 68ch; }
+.qdesc .rel { font-size: 12.5px; }
+.qdesc .rel b { color: var(--ink); font-weight: 500; }
+
+.sl { display: flex; align-items: center; gap: 10px; padding-top: 1px; --th: 16px; }
+/* Ползунок со своей заливкой: --v (0..1) задаёт заполнение, --fc — цвет до/после вехи */
+.rng { position: relative; display: flex; align-items: center; width: 170px; height: 22px; }
+.sl input[type="range"] {
+  --fill: calc(var(--th) / 2 + (100% - var(--th)) * var(--v, 0));
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; margin: 0; border-radius: 3px; cursor: pointer;
+  background: linear-gradient(to right, var(--fc, var(--route)) 0 var(--fill), var(--line) var(--fill) 100%);
+}
+.sl input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--th); height: var(--th); border-radius: 50%;
+  background: var(--fc, var(--route)); border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line);
+}
+.sl input[type="range"]::-moz-range-thumb {
+  width: var(--th); height: var(--th); border-radius: 50%; box-sizing: border-box;
+  background: var(--fc, var(--route)); border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line);
+}
+.sl input[type="range"]::-moz-range-track { background: transparent; }
+.tick {
+  position: absolute; top: 50%; left: calc(var(--th) / 2 + (100% - var(--th)) * var(--m));
+  width: 2px; height: 14px; transform: translate(-1px, -50%); border-radius: 1px;
+  background: var(--target); pointer-events: none;
+}
+.tick.hit { background: var(--route); }
+.q.locked .tick { background: var(--line); }
+.lunl, .lreq { font-size: 12.5px; color: var(--muted); padding: 0 8px 4px 38px; }
+.ladder button.blocked { opacity: .5; }
+.sl output { font-family: var(--font-mono); font-size: 13px; font-weight: 600; min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+.q.locked .qtitle { color: var(--muted); }
+.q.locked .sl input { cursor: not-allowed; opacity: .4; }
+.q.locked .sl output { color: var(--muted); font-weight: 400; }
+.ladder { list-style: none; margin: 2px 0 2px -8px; padding: 0; display: grid; gap: 2px; }
+.ladder button {
+  width: 100%; display: flex; gap: 10px; align-items: baseline; text-align: left;
+  background: none; border: 0; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13.5px; color: var(--muted);
+}
+.ladder button:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+.ladder button:disabled { cursor: not-allowed; }
+.lnum {
+  flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line);
+  display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 11px; transform: translateY(4px);
+}
+.ladder button.done { color: var(--ink); }
+.ladder button.done .lnum { border-color: var(--route); background: var(--route-soft); color: var(--route); }
+.ladder button.cur { color: var(--ink); font-weight: 600; background: var(--route-soft); }
+.ladder button.cur .lnum { border-color: var(--route); background: var(--route); color: var(--surface); }
+.lock { font-size: 12.5px; }
+.lock b { color: var(--ink); font-weight: 500; }
+.lockmark { margin-left: 2px; }
+
+/* Ссылки на пункты: отдельный цвет, номер пункта моноширинным */
+.qnum {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-right: 8px; font-variant-numeric: tabular-nums;
+}
+.ref { color: var(--ref); text-decoration: none; white-space: nowrap; }
+.ref b { font-family: var(--font-mono); font-size: .9em; font-weight: 400; margin-right: 1px; font-variant-numeric: tabular-nums; }
+.ref:hover { text-decoration: underline; text-underline-offset: 2px; }
+.q { scroll-margin-block: 80px; transition: background-color .4s; }
+.q.flash { background: var(--ref-soft); }
+
+/* ── Дорожная карта ── */
+.plan {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px; display: grid; gap: 18px; min-width: 0;
+}
+.plan-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.plan h2 { font-family: var(--font-display); font-weight: 500; font-size: 20px; }
+.total { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.alert { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--warn-soft); color: var(--ink); }
+.alert b { color: var(--warn); }
+.alert.calm { background: var(--route-soft); }
+.alert.calm b { color: var(--route); }
+
+.gantt { display: grid; gap: 6px; }
+.g-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; }
+.g-label { font-size: 12.5px; line-height: 1.25; min-width: 0; }
+.g-label .w { display: block; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.g-track { position: relative; height: 18px; background: var(--bg); border-radius: 4px; }
+.g-bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--route); min-width: 4px; }
+.g-bar.est { background: repeating-linear-gradient(135deg, var(--route) 0 6px, var(--route-soft) 6px 10px); }
+.g-bar.hand { background: none; border: 2px dashed var(--target); }
+.g-axis { position: relative; height: 18px; margin-left: 160px; }
+.g-axis span {
+  position: absolute; top: 0; transform: translateX(-50%); font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.g-axis span::before { content: ""; position: absolute; left: 50%; top: -6px; height: 5px; border-left: 1px solid var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.legend .l-firm { background: var(--route); }
+.legend .l-est { background: repeating-linear-gradient(135deg, var(--route) 0 4px, var(--route-soft) 4px 7px); }
+.legend .l-hand { border: 2px dashed var(--target); }
+
+.steps { display: grid; gap: 12px; }
+.step { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 6px; }
+.step-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.step h3 { font-size: 15px; font-weight: 600; }
+.step h3 .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-right: 6px; }
+.step .dur { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.step .dur em { font-style: normal; color: var(--muted); font-family: var(--font-body); font-size: 11.5px; margin-left: 4px; }
+.step .about { font-size: 13.5px; color: var(--muted); }
+.tasks { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.tasks li { font-size: 13.5px; padding-left: 18px; position: relative; }
+.tasks li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 8px; height: 8px; border-radius: 2px; border: 2px solid var(--route); }
+.tasks li.tail::before { border-color: var(--target); }
+.tasks .tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-left: 4px; }
+.copied { font-size: 13px; color: var(--route); }
+
+.foot { font-size: 13px; color: var(--muted); max-width: 80ch; display: grid; gap: 6px; }
+
+@media (max-width: 1000px) {
+  .stations { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .st::before { top: 22px; left: 9px; width: 4px; height: 100%; }
+  .st.planned::before { background: repeating-linear-gradient(180deg, var(--target) 0 10px, transparent 10px 16px); }
+  .st button {
+    grid-template-columns: 22px minmax(0, 1fr) auto; justify-items: start; text-align: left;
+    column-gap: 12px; row-gap: 2px; padding: 0 0 18px 0; align-items: start;
+  }
+  .dot { grid-row: 1 / span 4; }
+  .st .code { margin-top: 2px; grid-column: 2; }
+  .st .name, .st .desc { grid-column: 2; max-width: none; }
+  .chips { grid-column: 3; grid-row: 1 / span 2; justify-content: end; }
+  .st .meter { grid-column: 2; width: 100%; max-width: 160px; margin-top: 4px; }
+  .st .pct { grid-column: 2; }
+}
+@media (max-width: 900px) {
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .plan { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 720px) {
+  .route { padding: 18px 16px; }
+  .context { grid-template-columns: minmax(0, 1fr); }
+  .role { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .q { grid-template-columns: minmax(0, 1fr); }
+  .rng { flex: 1; width: auto; min-width: 0; }
+  .g-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .g-axis { margin-left: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .g-bar, .meter i, .lmeter i { transition: left .3s ease, width .3s ease; }
+  .dot { transition: background .2s, border-color .2s, box-shadow .2s; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="head">
+    <p class="eyebrow">Самодиагностика команды 1С · 5 минут</p>
+    <h1>Карта зрелости 1С-разработки</h1>
+    <p class="lead">Отметьте ползунками, насколько каждая практика уже работает в вашей команде. Карта покажет текущий этап, путь до цели и ориентировочные сроки по каждому шагу. ИИ подключается последним, когда процесс уже стабилен, и оценивается по главному: сколько задач команда выпускает и сколько времени разработчиков и поддержки на это уходит.</p>
+  </header>
+
+  <section class="route" aria-label="Карта зрелости">
+    <div class="summary" id="summary"></div>
+    <ol class="stations" id="stations"></ol>
+    <p class="hint"><b>Цель выбирается на схеме:</b> нажмите на этап, до которого хотите дойти.</p>
+  </section>
+
+  <div class="work">
+    <section class="quiz" aria-label="Опросник">
+      <div class="team">
+        <div class="team-head">
+          <h2>Команда</h2>
+          <p>Важно не число людей, а какие роли в команде есть и сколько часов она отрабатывает в месяц.</p>
+        </div>
+        <div class="field hours">
+          <label for="hours">Трудозатраты команды, часов в месяц</label>
+          <input type="number" id="hours" min="0" step="50" inputmode="numeric">
+          <span class="hint-s" id="hoursHint"></span>
+        </div>
+        <div class="roles" id="roles"></div>
+      </div>
+
+      <div class="sample" id="sampleNote">
+        <span>Показан пример ответов типичной команды. Замените их на свои.</span>
+        <button class="btn" id="resetBtn" type="button">Очистить ответы</button>
+      </div>
+      <div class="sample" id="emptyNote" hidden>
+        <span>Ответы очищены. Пройдите вопросы ниже.</span>
+        <button class="btn" id="sampleBtn" type="button">Вернуть пример</button>
+      </div>
+
+      <div id="levels" class="quiz"></div>
+    </section>
+
+    <aside class="plan" aria-label="Дорожная карта">
+      <div class="plan-head">
+        <h2>Дорожная карта</h2>
+        <span class="total" id="total"></span>
+      </div>
+      <div id="alerts" class="steps"></div>
+      <div class="gantt" id="gantt"></div>
+      <div class="legend">
+        <span><i class="l-firm"></i>срок по методике</span>
+        <span><i class="l-est"></i>ориентировочный срок</span>
+        <span><i class="l-hand"></i>передача и сопровождение</span>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div class="btn-row">
+        <button class="btn primary" id="copyBtn" type="button">Скопировать дорожную карту</button>
+        <span class="copied" id="copied" aria-live="polite"></span>
+      </div>
+      <textarea id="copyFallback" hidden readonly rows="8" style="width:100%;font:13px var(--font-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px"></textarea>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <p>Ползунок показывает, насколько практика выполнена: от 0 до 100%. Вес практики — её доля в общей зрелости, сумма весов равна 100. Практика даёт баллы пропорционально проценту выполнения. Больше весят практики, на которые опираются следующие этапы: Git, автосборка, статический анализ, код-ревью.</p>
+    <p>Риска на ползунке — веха: после неё пункт открывает следующие практики. Пока веха не пройдена, полоса оранжевая, после — зелёная. У пошаговых пунктов вехи стоят на тех шагах, которые что-то открывают.</p>
+    <p>Некоторые практики невозможны без других: например, автосборка без Git. Такой пункт заблокирован и не даёт баллов, пока нужные практики не выполнены хотя бы на 50%, а переход на EDT и Git не дошёл до нужного шага. Откройте описание пункта, чтобы увидеть, что он требует и что открывает.</p>
+    <p>Этап считается достигнутым, когда набрано не меньше 75% его баллов (отметка на полосе прогресса) и все предыдущие этапы уже достигнуты.</p>
+    <p>Срок аудита (2–4 недели) задан методикой, подготовка базы занимает по ней 4–8 недель, плюс 1–2 недели, если базовых инструментов ещё нет. Сроки следующих шагов ориентировочные: они зависят от того, сколько уже сделано, от объёма команды в часах и от того, какие роли в ней совмещаются, и уточняются на аудите.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var LEVELS = [
+    { n: 0, name: "Ручной режим", desc: "Правки в рабочей базе, задачи в почте, знания в головах" },
+    { n: 1, name: "Базовые инструменты", desc: "Задачи в трекере, база знаний, хранилище или Git" },
+    { n: 2, name: "Правила", desc: "Базы из шаблона, общий тестовый контур, правила выпуска" },
+    { n: 3, name: "EDT и Git", desc: "Код в Git, команда поэтапно переходит в EDT" },
+    { n: 4, name: "Конвейер", desc: "Сборка, проверки, доставка и защищённая выкладка" },
+    { n: 5, name: "Контроль качества", desc: "Ревью, автотесты, приёмка и авторегистрация ошибок" },
+    { n: 6, name: "ИИ-разработка", desc: "Больше выпущенных задач за меньшие затраты разработки и поддержки" }
+  ];
+  var MAXL = LEVELS.length - 1;
+
+  // deps — практики, без которых пункт заблокирован; идут раньше пункта в списке
+  var QS = [
+    { id: "trk", s: "Задачи в трекере", w: 7, lv: 1, deps: [],
+      q: "Задачи фиксируются в трекере с постановкой и критериями приёмки",
+      d: "Мало просто завести трекер (Jira, YouTrack, Redmine). Частая проблема: задача появляется задним числом, только чтобы было что указать в коммите или куда списать трудозатраты. Такая задача ничего не говорит о том, что нужно сделать и как проверить результат, а без критериев приёмки заказчик не может принять работу. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Задачи приходят в почте и мессенджерах, трекера нет" },
+        { l: "Задачи заводятся в трекере задним числом — для коммитов и учёта трудозатрат", t: "Завести трекер задач (Jira, YouTrack) и фиксировать в нём все доработки и ошибки" },
+        { l: "Задача заводится в трекере до начала работ", t: "Заводить задачу до начала работ, а не после" },
+        { l: "В задаче есть постановка: зачем и что нужно сделать", t: "Описывать в задаче цель и что нужно сделать" },
+        { l: "В задаче есть критерии приёмки: как проверить результат", t: "Добавлять в задачу критерии приёмки: как проверить результат" },
+        { l: "Без постановки и критериев приёмки задачу не берут в работу", t: "Не брать в работу задачи без постановки и критериев приёмки" }
+      ] },
+    { id: "kb", s: "База знаний", w: 2, lv: 1, deps: [],
+      q: "Есть база знаний по системе и процессам (Confluence, Wiki)",
+      t: "Завести базу знаний (Confluence, Wiki) по системе и процессам разработки",
+      d: "Архитектура, интеграции, нестандартные механизмы и порядок работы команды описаны в одном месте. 100% — новый разработчик разбирается в системе по базе знаний, а не по расспросам коллег." },
+    { id: "repo", s: "Весь код под версионированием", w: 3, lv: 1, deps: [],
+      q: "Весь код находится в хранилище конфигурации или Git",
+      d: "Неважно, хранилище или Git: главное, чтобы под контролем был весь код. Обычно мешают две вещи: код, который хранится в данных (тексты в справочниках и константах, выполняемые через «Выполнить»), и внешние обработки, которые лежат в файлах или в базе. Ни то ни другое не версионируется, поэтому и код из данных, и внешние обработки переносятся в конфигурацию или расширения. Когда их не осталось, весь код в хранилище или Git. Команда на Git и EDT с загрузкой в базу через конвертер отмечает шаг по тем же признакам.",
+      steps: [
+        { l: "Ни хранилища, ни Git: правки вносятся прямо в базу" },
+        { l: "Конфигурация в хранилище или Git, но часть кода хранится в данных", t: "Завести хранилище конфигурации или Git и вносить изменения конфигурации через него" },
+        { l: "Кода в данных нет, но остаются внешние обработки", t: "Перенести код из данных (справочники, константы, «Выполнить») в конфигурацию или расширения" },
+        { l: "Внешних обработок нет: всё перенесено в конфигурацию или расширения", t: "Перенести внешние обработки и отчёты в конфигурацию или расширения" },
+        { l: "Весь код в хранилище или Git, правок мимо них нет", t: "Запретить правки кода мимо хранилища или Git" }
+      ] },
+    { id: "repotask", s: "Задача в каждом изменении", w: 2, lv: 1, deps: [{ id: "repo", at: 1 }, { id: "trk", at: 1 }],
+      q: "Каждое помещение в хранилище или коммит в Git ссылается на задачу",
+      t: "Указывать номер задачи в каждом помещении в хранилище или коммите в Git",
+      d: "В хранилище номер задачи пишется в комментарии к помещению, в Git — в сообщении коммита или в имени ветки, а трекер показывает связанные коммиты. 100% — по любому изменению можно найти задачу, а по задаче — все её изменения." },
+    { id: "devdb", s: "Базы разработчиков из шаблона", w: 3, lv: 2, deps: [],
+      q: "Базы разработчиков создаются и обновляются из шаблонной базы",
+      d: "Шаблонная база — эталонная копия с актуальной конфигурацией и подготовленными, обезличенными данными. Из неё создаются и регулярно обновляются базы разработчиков: все работают на одинаковых данных, а свежую базу можно получить за минуты. По этой же базе проходят автотесты, поэтому она всегда в рабочем состоянии. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Базы разработчиков — ручные копии рабочей" },
+        { l: "Есть шаблонная база с подготовленными данными", t: "Подготовить шаблонную базу с актуальной конфигурацией и обезличенными данными" },
+        { l: "Базы разработчиков создаются из шаблонной", t: "Создавать базы разработчиков из шаблонной базы" },
+        { l: "Базы разработчиков регулярно обновляются из шаблонной", t: "Настроить регулярное обновление баз разработчиков из шаблонной" },
+        { l: "По шаблонной базе проходят автотесты", req: ["tests"], t: "Прогонять автотесты по шаблонной базе после каждого её обновления" }
+      ] },
+    { id: "testdb", s: "Общая тестовая база", w: 3, lv: 2, deps: [],
+      q: "Есть общая тестовая база, подключённая к тестовому контуру (обмены, интеграции)",
+      t: "Развернуть общую тестовую базу и подключить её к тестовому контуру",
+      d: "Одна общая база для тестирования, подключённая к тестовому контуру: тестовые обмены, интеграции, свежая копия данных. 100% — перед выпуском каждое изменение проверяется в этой базе вместе с интеграциями." },
+    { id: "cfgdev", s: "Разработка в конфигурации", w: 3, lv: 2, deps: [],
+      q: "Разработка ведётся в конфигурации, а не в расширении",
+      d: "Частый неправильный подход: у каждой базы своё расширение, и вся разработка идёт только в нём. Так выглядит проще, но процесс ломается: срочные исправления выпускаются расширениями, а расширение может заимствовать и перехватывать только объекты конфигурации, не другого расширения. Исправить код, который живёт в расширении, исправлением-расширением нельзя. Пока разработка в расширении, правила выпуска срочных исправлений и всё, что на них опирается, заблокированы. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Вся разработка ведётся в расширении своей базы" },
+        { l: "Новые доработки пишутся в конфигурации, старые остаются в расширении", t: "Писать новые доработки в конфигурации, а не в расширении базы" },
+        { l: "Доработки из расширения перенесены в конфигурацию", t: "Перенести доработки из расширения базы в конфигурацию" },
+        { l: "Расширения — только для срочных исправлений и обособленных модулей", t: "Оставить расширения только для срочных исправлений и обособленных подключаемых модулей" }
+      ] },
+    { id: "rel", s: "Правила выпуска", w: 4, lv: 2, deps: ["testdb", { id: "cfgdev", at: 2 }],
+      q: "Релизы и срочные исправления выходят по правилам, срочные — через расширения",
+      t: "Ввести правила выпуска релизов и срочных исправлений через расширения и обработчики обновления",
+      d: "Описано, как собирается и проверяется релиз, кто его согласует и как выходят срочные исправления: через расширения и обработчики обновления. 100% — релизы и срочные исправления выходят только по этим правилам." },
+    { id: "prod", s: "Рабочая база только через релиз", w: 3, lv: 2, deps: ["rel"],
+      q: "Изменения попадают в рабочую базу только релизом, без правок на месте",
+      t: "Вносить изменения в рабочую базу только релизом или расширением по правилам выпуска",
+      d: "В рабочей базе не правят конфигурацию на месте и не подкладывают исправления в обход выпуска. 100% — любое изменение рабочей базы проходит как релиз или расширение по правилам выпуска." },
+    { id: "edt", s: "Переход на EDT и Git", w: 18, lv: 3, deps: [],
+      q: "Код хранится в Git, команда работает в 1С:EDT",
+      d: "1С:EDT — среда разработки с поддержкой Git, рефакторингом и проверками кода. Переход идёт по шагам, не прерывая работу: сначала история кода из хранилища выгружается в Git, затем в EDT переходят ведущие разработчики и за ними вся команда. Если хранилища у вас уже нет, код в Git, а в базу он загружается через конвертер, отметьте последний шаг. Если код в Git, но разработка пока в Конфигураторе, отметьте шаг 1.",
+      steps: [
+        { l: "Код только в хранилище конфигурации" },
+        { l: "Код выгружается в Git, история изменений в Git", t: "Настроить выгрузку хранилища в Git (gitsync) на время перехода" },
+        { l: "Ведущие разработчики работают в EDT с Git", t: "Перевести ведущих разработчиков в 1С:EDT с работой через Git" },
+        { l: "Большая часть команды в EDT", t: "Перевести в EDT большую часть команды" },
+        { l: "Вся команда в EDT и Git, хранилища нет", t: "Перевести остальных разработчиков и вывести хранилище из эксплуатации" }
+      ] },
+    { id: "build", s: "Сборка из Git", w: 4, lv: 4, deps: [{ id: "edt", at: 1 }],
+      q: "Конфигурация и расширения собираются конвейером из Git",
+      d: "Сервер сборки (GitLab CI, Jenkins) сам собирает поставку из Git: .cf релиза по тегу — выгрузкой проекта EDT в формат Конфигуратора и ibcmd, расширения — на каждое изменение. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: ".cf и .cfe собирают вручную в Конфигураторе" },
+        { l: ".cf релиза собирается конвейером по тегу", t: "Собирать .cf релиза конвейером по тегу из Git (выгрузка EDT, ibcmd)" },
+        { l: "К релизу прикладывается описание: коммит, версия, задачи, контрольная сумма", t: "Прикладывать к релизу описание: коммит тега, версию, задачи с прошлого релиза, SHA-256" },
+        { l: "Расширения собираются конвейером на каждое изменение", t: "Собирать расширения конвейером на каждый push в основную ветку" },
+        { l: "Сборки хранятся с версиями: лента или реестр пакетов", t: "Хранить собранные релизы и расширения с версиями в ленте или реестре пакетов" }
+      ] },
+    { id: "lint", s: "Проверки в конвейере", w: 4, lv: 4, deps: [{ id: "build", at: 1 }],
+      q: "Конвейер проверяет каждую сборку и не пропускает ошибки",
+      d: "Расширение нужно проверять относительно релиза, который работает в продуктиве, а не относительно master: иначе ошибки вроде «Повторяющееся имя метода» или вызова метода, которого в релизе нет, всплывут только у пользователей. Платформенная проверка применимости и ibcmd такие ошибки не находят, EDT находит. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Сборку никто не проверяет" },
+        { l: "Конфигурация проверяется в EDT (1cedtcli validate)", t: "Проверять конфигурацию в EDT в конвейере (1cedtcli validate)" },
+        { l: "Расширения проверяются относительно релиза, ошибка останавливает публикацию", t: "Проверять расширения относительно релиза в продуктиве и не публиковать с ошибками" },
+        { l: "Статический анализ по стандартам 1С, критичные замечания блокируют", t: "Подключить статический анализ по стандартам 1С (BSL LS, SonarQube, АПК) с блокировкой критичных замечаний" }
+      ] },
+    { id: "deliver", s: "Доставка исправлений", w: 4, lv: 4, deps: [{ id: "lint", at: 2 }, "rel"],
+      q: "Исправления доходят до рабочей базы через конвейер",
+      d: "Срочное исправление — расширение, которое конвейер собирает из коммита и проверяет относительно релиза. Дальше оно публикуется в ленту, база сама его забирает, а конвейер убеждается, что исправление встало и подключилось. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Исправления собирают и ставят вручную" },
+        { l: "Проверенное исправление публикуется в ленту автоматически", t: "Публиковать проверенные исправления в ленту автоматически" },
+        { l: "База сама забирает исправления из ленты", t: "Настроить загрузку исправлений из ленты регламентным заданием базы" },
+        { l: "Конвейер проверяет, что исправление встало и подключилось", t: "Проверять в конвейере, что исправление установилось в базу и подключается" },
+        { l: "Срочные исправления перезапускают сеансы, откат — через revert", t: "Поддержать срочные исправления с перезапуском сеансов и откат через git revert с отзывом сборки" }
+      ] },
+    { id: "rollout", s: "Выкладка релиза", w: 3, lv: 4, deps: [{ id: "build", at: 1 }, "testdb"],
+      q: "Релиз выкладывается в рабочую базу конвейером",
+      d: "Выкладка релиза — это загрузка .cf, перезапуск кластера и обновление базы данных. Когда это делают задания конвейера, а не человек в Конфигураторе, каждый релиз проходит одинаково, а сбой не оставляет базу в полуобновлённом виде. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Обновление вручную: Конфигуратор и рассылка «выйдите из базы»" },
+        { l: "Релиз сначала выкладывается тем же способом в тестовую базу", t: "Выкладывать релиз конвейером сначала в общую тестовую базу" },
+        { l: ".cf загружается в рабочую базу заданием конвейера", t: "Загружать .cf в рабочую базу заданием конвейера, объединением" },
+        { l: "Перезапуск кластера и обновление базы — заданием под заранее поставленной блокировкой", t: "Перезапускать кластер и обновлять базу заданием под заранее поставленной блокировкой" },
+        { l: "Перед обновлением сохраняется всё для отката, блокировка снимается после проверки", t: "Сохранять перед обновлением всё для отката и снимать блокировку только после проверки базы" }
+      ] },
+    { id: "protect", s: "Защита рабочей среды", w: 3, lv: 4, deps: [{ id: "edt", at: 1 }, "prod"],
+      q: "Рабочая среда меняется только через согласованный конвейер",
+      d: "Правило «изменения в рабочую базу — только релизом» держится, пока у разработчиков есть права администратора. Защищённая среда — когда менять её можно только через конвейер, а выкладку заранее согласует ответственный. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "У разработчиков права администратора в рабочей базе и на серверах" },
+        { l: "Основная ветка защищена: изменения только через merge request", t: "Защитить основную ветку: изменения только через merge request" },
+        { l: "Релиз запускает только защищённый тег, раннер защищён", t: "Разрешить запуск релиза только защищённым тегом и защитить раннер" },
+        { l: "У разработчиков нет прав администратора: всё только через конвейер", t: "Убрать у разработчиков права администратора в рабочей базе и на серверах" },
+        { l: "Выкладка заранее согласуется, действия конвейера журналируются", t: "Согласовывать выкладку в рабочую базу заранее и хранить журнал действий конвейера" }
+      ] },
+    { id: "review", s: "Код-ревью", w: 5, lv: 5, deps: [{ id: "edt", at: 2 }],
+      q: "Каждое изменение проходит код-ревью по утверждённым правилам",
+      t: "Ввести код-ревью каждого изменения по утверждённым правилам",
+      d: "Перед слиянием изменение смотрит второй разработчик по утверждённому чек-листу. 100% — ни одно изменение не попадает в релиз без ревью." },
+    { id: "tests", s: "Автотесты", w: 4, lv: 5, deps: [{ id: "build", at: 1 }, { id: "devdb", at: 1 }],
+      q: "Автотесты (YAxUnit, Vanessa Automation, Тестер) запускаются в конвейере",
+      t: "Внедрить автоматизированное тестирование в конвейере (YAxUnit, Vanessa Automation, Тестер)",
+      d: "Модульные тесты (YAxUnit) и сценарные тесты (Vanessa Automation, Тестер) запускаются в конвейере на каждое изменение. 100% — ключевые бизнес-процессы покрыты тестами, упавший тест останавливает выпуск." },
+    { id: "accept", s: "Приёмка заказчиком", w: 2, lv: 5, deps: ["testdb", { id: "trk", at: 4 }],
+      q: "Пользователи заказчика сами проверяют выполненные задачи",
+      d: "Автотесты не заменяют проверку людьми, которые работают в системе. Ключевые пользователи заказчика сами проверяют выполненные задачи и другие сценарии в общей тестовой базе. Проверять есть по чему, только если в задаче записаны критерии приёмки. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Задачи проверяет только исполнитель или аналитик" },
+        { l: "Заказчик проверяет задачи в общей тестовой базе", t: "Дать пользователям заказчика доступ к общей тестовой базе для проверки задач" },
+        { l: "Проверка идёт по критериям приёмки из задачи", t: "Проверять задачи по критериям приёмки, записанным в задаче" },
+        { l: "Приёмка фиксируется в трекере, без неё задача не уходит в релиз", t: "Фиксировать приёмку заказчиком в трекере и не выпускать непринятые задачи" },
+        { l: "Перед релизом ключевые пользователи проверяют основные сценарии", t: "Перед каждым релизом проверять основные сценарии силами ключевых пользователей" }
+      ] },
+    { id: "hist", s: "Доступ к истории и коду", w: 2, lv: 5, deps: [{ id: "edt", at: 1 }],
+      q: "Видна полная история изменений, у команды есть доступ ко всему коду",
+      t: "Открыть команде полную историю изменений и доступ ко всему коду системы",
+      d: "Любой участник команды видит историю изменений и весь код системы, включая расширения. 100% — нет кода, о котором знает только один человек." },
+    { id: "errpipe", s: "Ошибки тестов в трекере", w: 2, lv: 5, deps: ["tests", { id: "trk", at: 1 }],
+      q: "Упавшие тесты и проверки конвейера автоматически заводятся ошибками в трекере",
+      t: "Заводить ошибку в трекере автоматически при падении тестов и проверок конвейера",
+      d: "Когда автотест или проверка в конвейере падает, ошибка сама появляется в трекере: какой тест, на каком коммите, ссылка на журнал сборки — и привязывается к задаче, коммит которой её вызвал. 100% — ни одно падение не теряется в журналах конвейера." },
+    { id: "erruser", s: "Ошибки пользователей в трекере", w: 2, lv: 5, deps: [{ id: "trk", at: 1 }],
+      q: "Ошибки, возникшие у пользователей, автоматически регистрируются в трекере",
+      d: "Пользователи сообщают далеко не обо всех ошибках, а из звонков и чатов теряется контекст. Ошибки из рабочей базы собираются автоматически и превращаются в задачи с текстом, стеком и версией, а после выпуска исправления видно, прекратилась ли ошибка. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Об ошибках узнают из звонков, почты и чатов" },
+        { l: "Ошибки пользователей собираются автоматически: отчёты об ошибках, журнал регистрации", t: "Собирать ошибки пользователей автоматически из отчётов об ошибках и журнала регистрации" },
+        { l: "По ошибке автоматически заводится задача с текстом, стеком и версией", t: "Автоматически заводить задачу в трекере по ошибке пользователя с текстом, стеком и версией" },
+        { l: "Одинаковые ошибки склеиваются, видно число затронутых пользователей", t: "Склеивать одинаковые ошибки и показывать, сколько пользователей затронуто" },
+        { l: "После выпуска исправления видно, что ошибка у пользователей прекратилась", t: "Отслеживать, что после выпуска исправления ошибка у пользователей прекратилась" }
+      ] },
+    { id: "aiint", s: "ИИ-агент и MCP", w: 4, lv: 6, part: "a", deps: [{ id: "edt", at: 1 }],
+      q: "ИИ-агент работает с проектом и базами через MCP",
+      d: "ИИ-агент (например, Claude Code) не ограничивается правкой файлов. Через MCP-серверы он работает с EDT, выполняет запросы и код в базах, читает журнал регистрации, берёт постановку из трекера и пишет в него итог. Каждый следующий шаг даёт агенту больше контекста и возможность самому проверить результат. Доступ к рабочей базе — только на чтение и по правилам безопасной работы с данными (6.2). Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "ИИ не используется или только чат в браузере" },
+        { l: "Агент работает с исходниками проекта в Git", t: "Подключить ИИ-агента к исходникам проекта в Git" },
+        { l: "Агент правит конфигурацию через MCP среды разработки: метаданные, модули, проверки, тесты", req: [{ id: "edt", at: 2 }], t: "Подключить агента к EDT через MCP: метаданные, модули, проверки, запуск тестов" },
+        { l: "MCP к базе разработчика: запросы, выполнение кода, метаданные", t: "Дать агенту MCP к базе разработчика: запросы, выполнение кода, структура метаданных" },
+        { l: "MCP к общей тестовой базе: агент сам проверяет задачу", req: ["testdb"], t: "Дать агенту MCP к общей тестовой базе для проверки задач" },
+        { l: "MCP к трекеру и базе знаний: постановка из задачи, итог в задачу", req: ["kb", { id: "trk", at: 3 }], t: "Подключить агента к трекеру и базе знаний через MCP (Jira, Confluence)" },
+        { l: "MCP к рабочей базе только на чтение: журнал регистрации, запросы для разбора ошибок", req: [{ id: "aisec", at: 3 }], t: "Дать агенту доступ к рабочей базе через MCP только на чтение: журнал регистрации, запросы" }
+      ] },
+    { id: "aisec", s: "Критерии безопасности ИИ", w: 3, lv: 6, part: "a", deps: [],
+      q: "Критерии безопасности ИИ",
+      d: "Главный риск — персональные и коммерческие данные, которые агент может прочитать в базе и передать модели. Сначала агенту дают только обезличенные шаблонные базы, к рабочей базе — только через анонимизирующий прокси. Дальше — когда сам агент настроен так, что не выбирает персональные данные, и прокси уже не нужен. Самый строгий вариант — модель на внутренних серверах компании: данные не покидают контур, и анонимизация теряет смысл. Если вы сразу используете такую модель, отметьте последний шаг. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Правил нет: агенту доступны любые базы и данные" },
+        { l: "В компании определено, какие данные можно передавать модели и какие модели использовать", t: "Определить, какие данные можно передавать модели и какие модели использовать" },
+        { l: "ИИ подключается только к шаблонным базам, прошедшим анонимизацию", req: [{ id: "devdb", at: 1 }], t: "Подключать ИИ только к шаблонным базам, прошедшим анонимизацию" },
+        { l: "К рабочей базе — только через анонимизирующий прокси", t: "Подключать ИИ к рабочей базе только через анонимизирующий прокси" },
+        { l: "Правила агента не дают выбирать персональные данные, прокси не нужен", t: "Настроить правила агента так, чтобы он не выбирал персональные данные, и отказаться от прокси" },
+        { l: "Модель развёрнута на внутренних серверах: данные не покидают контур, анонимизация не нужна", t: "Развернуть модель на внутренних серверах компании, чтобы данные не покидали контур" }
+      ] },
+    { id: "aiproc", s: "Правила ИИ-разработки", w: 3, lv: 6, part: "b", deps: [{ id: "aiint", at: 3 }, { id: "aisec", at: 2 }, "review"],
+      q: "Есть методология и правила ИИ-разработки для всей команды",
+      t: "Закрепить методологию, среду и правила ИИ-разработки для всей команды",
+      d: "Описано, как команда работает с ИИ: ведущие проектируют, ИИ пишет код, специалисты проверяют. 100% — ИИ-разработка стала обычной практикой всей команды." },
+    { id: "spec", s: "Спецификации", w: 2, lv: 6, part: "b", deps: ["kb"],
+      q: "Система и изменения описаны спецификациями, техдолг под контролем",
+      t: "Вести документацию системы и изменений в виде спецификаций, контролировать техдолг",
+      d: "Система и каждое изменение описаны спецификациями, по которым работают и люди, и ИИ; техдолг учитывается и планово сокращается. 100% — спецификации обновляются вместе с кодом." },
+    { id: "effect", s: "Эффект ИИ в трудозатратах", w: 3, lv: 6, part: "b", deps: [{ id: "trk", at: 2 }],
+      q: "Эффект ИИ измеряется в трудозатратах и числе выпущенных задач",
+      d: "Цель ИИ не в том, чтобы он писал код, а в том, чтобы команда выпускала больше задач за меньшее время разработчиков и поддержки. Это видно только по цифрам: время списывается на задачи, есть база для сравнения до ИИ, и после каждого релиза понятно, сколько стоила задача и сколько задач вышло. Списывать время честно получается, только если задача заводится до начала работ (1.1, шаг 2). Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "Эффект не измеряется: «кажется, стало быстрее»" },
+        { l: "Трудозатраты разработчиков списываются на задачи в трекере", t: "Списывать трудозатраты разработчиков на задачи в трекере" },
+        { l: "Есть база для сравнения: затраты и выпуск задач до внедрения ИИ", t: "Зафиксировать затраты на задачу и число выпущенных задач до внедрения ИИ" },
+        { l: "После каждого релиза видно: часы на задачу, задачи на разработчика", req: [{ id: "aiint", at: 2 }], t: "Сравнивать по каждому релизу часы на задачу и число задач на разработчика" },
+        { l: "Решения о развитии ИИ принимаются по цифрам затрат и выпуска", t: "Принимать решения о развитии ИИ по цифрам затрат и выпуска задач" }
+      ] },
+    { id: "aisupport", s: "ИИ для поддержки и пользователей", w: 2, lv: 6, part: "b", deps: [{ id: "aiint", at: 6 }],
+      q: "Поддержка и пользователи работают с ИИ через подключение к рабочей базе",
+      d: "Когда у ИИ есть безопасное подключение к рабочей базе, им пользуются не только разработчики. Поддержка разбирает обращения по журналу регистрации и данным без программиста, ключевые пользователи сами получают ответы и выборки. Это снимает с разработчиков часть обращений и тоже сокращает затраты. Отметьте последний выполненный шаг.",
+      steps: [
+        { l: "ИИ используют только разработчики" },
+        { l: "Поддержка разбирает обращения с ИИ: журнал регистрации, данные базы", t: "Дать поддержке ИИ с подключением к рабочей базе для разбора обращений" },
+        { l: "Ключевые пользователи сами получают ответы и выборки через ИИ", t: "Дать ключевым пользователям ИИ для ответов и выборок по рабочей базе" },
+        { l: "Затраты поддержки и обращения к разработчикам входят в оценку эффекта", req: [{ id: "effect", at: 1 }], t: "Учитывать затраты поддержки и число обращений к разработчикам в оценке эффекта ИИ" }
+      ] }
+  ];
+  var UNLOCK = 0.5;
+  var BYID = {};
+  QS.forEach(function (q) { BYID[q.id] = q; q.needed = []; });
+  // Зависимость: обычный пункт — выполнен хотя бы на 50%, пошаговый — дошёл до шага at
+  // Вехи: значения ползунка, после которых пункт открывает другие практики
+  // У шага пошагового пункта могут быть свои требования (req): шаг недоступен, пока они не выполнены
+  QS.forEach(function (q) { q.unl = []; q.miles = []; });
+  function normDep(d, q, step) {
+    var o = typeof d === "string" ? { id: d } : { id: d.id, at: d.at }, src = BYID[o.id];
+    o.min = src.steps ? o.at / (src.steps.length - 1) : UNLOCK;
+    if (src.needed.indexOf(q.id) < 0) src.needed.push(q.id);
+    src.unl.push({ id: q.id, min: o.min, at: o.at, step: step });
+    if (src.miles.indexOf(o.min) < 0) src.miles.push(o.min);
+    return o;
+  }
+  QS.forEach(function (q) {
+    q.deps = q.deps.map(function (d) { return normDep(d, q); });
+    (q.steps || []).forEach(function (st, k) {
+      st.req = (st.req || []).map(function (d) { return normDep(d, q, k); });
+    });
+  });
+  QS.forEach(function (q) { q.miles.sort(function (a, b) { return a - b; }); });
+
+  // Номер пункта: этап.порядковый номер внутри этапа
+  for (var lvN = 1; lvN <= MAXL; lvN++) {
+    QS.filter(function (q) { return q.lv === lvN; }).forEach(function (q, i) { q.idx = i + 1; q.num = lvN + "." + (i + 1); });
+  }
+
+  var SAMPLE = {
+    answers: { trk: 0.8, kb: 0.6, repo: 1, repotask: 0.4, accept: 0.25, devdb: 0.5, testdb: 1, cfgdev: 1, rel: 0.7, prod: 0.8,
+               edt: 0.2, build: 0.25, lint: 0, deliver: 0, rollout: 0.25, protect: 0.25,
+               review: 0.4, tests: 0, hist: 0.3, errpipe: 0, erruser: 0.25, aiint: 0, aisec: 0, aiproc: 0, spec: 0, effect: 0.25, aisupport: 0 },
+    roles: { lead: "sep", analyst: "comb", tester: "comb", devops: "none", support: "sep", rm: "comb" },
+    hours: 1200, target: 6, sample: true
+  };
+  // Роли: отдельный человек, роль совмещает кто-то другой, роли нет. Совмещение и отсутствие удлиняют шаги,
+  // на которые роль влияет, а работа ложится на тех, кто совмещает
+  var ROLES = [
+    { id: "lead", l: "Ведущий разработчик, архитектор", h: "проектирует решения, ведёт переход и ИИ-разработку", step: { 4: [0.15, 0.3], 5: [0.1, 0.2] } },
+    { id: "analyst", l: "Аналитик", h: "постановки и критерии приёмки", step: { 1: [0.1, 0.2], 3: [0.1, 0.2] } },
+    { id: "tester", l: "Тестировщик", h: "тестирование, автотесты, приёмка", step: { 3: [0.2, 0.35] } },
+    { id: "devops", l: "Инженер сборки и выкладки", h: "конвейер, стенды, выкладка релизов", step: { 2: [0.15, 0.3] } },
+    { id: "support", l: "Поддержка пользователей", h: "обращения и разбор ошибок", step: { 5: [0.1, 0.15] } },
+    { id: "rm", l: "Руководитель или релиз-менеджер", h: "приоритеты, релизы, согласование выкладки", step: { 2: [0.05, 0.15], 3: [0.05, 0.1] } }
+  ];
+  var ROLE_STATE = { sep: "есть отдельно", comb: "совмещается", none: "нет" };
+  // Объём команды в часах в месяц: от него зависит, сколько длится раскатка практик на всех
+  function volumeFactor(h) { return !h ? 1 : h <= 500 ? 0.8 : h <= 1500 ? 1 : h <= 4000 ? 1.3 : 1.6; }
+  var THRESHOLD = 0.75;
+  var KEY = "maturity-1c-v19";
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  var state = clone(SAMPLE);
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && saved.answers) state = saved;
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function pct(v) { return Math.round(v * 100) + "%"; }
+  // Ссылка на пункт: номер + краткое имя, по клику — переход к пункту
+  function ref(id, step, short) {
+    var q = BYID[id];
+    var label = short ? "" : " " + esc(q.s);
+    return '<a class="ref" href="#q-' + id + '" data-ref="' + id + '"><b>' + q.num + (step !== undefined ? " · шаг " + step : "") + '</b>' + label + '</a>';
+  }
+  function names(ids) { return ids.map(function (id) { return ref(id); }).join(", "); }
+  function depText(d) {
+    var src = BYID[d.id];
+    return ref(d.id) + " — " + (src.steps ? "до шага " + d.at + " «" + esc(src.steps[d.at].l) + "»" : "хотя бы на 50%");
+  }
+  function stepIndex(q, v) { return Math.round(v * (q.steps.length - 1)); }
+  function unlNames(list) {
+    var seen = {};
+    return list.filter(function (u) { var k = u.id + ":" + u.step; if (seen[k]) return false; seen[k] = 1; return true; })
+      .map(function (u) { return ref(u.id, u.step); }).join(", ");
+  }
+  function unmet(list, eff) { return list.filter(function (d) { return !(eff[d.id] >= d.min - 1e-9); }); }
+
+  // ── Опросник ──
+  function buildQuiz() {
+    var html = "";
+    for (var l = 1; l <= MAXL; l++) {
+      var items = QS.filter(function (q) { return q.lv === l; });
+      var lw = items.reduce(function (s, q) { return s + q.w; }, 0);
+      html += '<div class="lvl"><div class="lvl-head"><h3><span class="code">Этап ' + l + '</span>' + LEVELS[l].name +
+        '<span class="lw">' + lw + ' из 100 баллов</span></h3><span class="status" id="st-' + l + '"></span>' +
+        '<div class="lvl-prog"><span class="lmeter" title="Отметка — порог 75%, после которого этап засчитан"><i id="lm-' + l + '"></i></span>' +
+        '<span class="pct" id="lp-' + l + '"></span></div></div><div class="qs">';
+      items.forEach(function (q) {
+        var rel = "";
+        if (q.deps.length) rel += '<p class="rel"><b>Требует:</b> ' + q.deps.map(depText).join("; ") + '</p>';
+        (q.steps || []).forEach(function (st, k) {
+          if (st.req.length) rel += '<p class="rel"><b>Шаг ' + k + ' требует:</b> ' + st.req.map(depText).join("; ") + '</p>';
+        });
+        if (q.unl.length && q.steps) {
+          rel += '<p class="rel"><b>Открывает:</b> ' + q.miles.map(function (m) {
+            var at = Math.round(m * (q.steps.length - 1));
+            return 'с шага ' + at + ' — ' + unlNames(q.unl.filter(function (u) { return u.min === m; }));
+          }).join("; ") + '</p>';
+        } else if (q.unl.length) {
+          rel += '<p class="rel"><b>Открывает с 50%:</b> ' + unlNames(q.unl) + '</p>';
+        }
+        var n = q.steps ? q.steps.length - 1 : 0;
+        var range = q.steps ? 'min="0" max="' + n + '" step="1"' : 'min="0" max="100" step="10"';
+        var ticks = q.miles.map(function (m) {
+          return '<i class="tick" data-m="' + m + '" style="--m:' + m + '" aria-hidden="true"></i>';
+        }).join("");
+        var ladder = q.steps ? '<ol class="ladder" id="ld-' + q.id + '">' + q.steps.map(function (st, i) {
+          // Ссылки вынесены из кнопки шага: ссылка внутри кнопки не кликается
+          var opens = q.unl.filter(function (u) { return u.at === i; });
+          return '<li><button type="button" data-q="' + q.id + '" data-step="' + i + '"><span class="lnum">' + i + '</span><span>' + esc(st.l) + '</span></button>' +
+            (st.req.length ? '<p class="lreq" id="lr-' + q.id + '-' + i + '" hidden></p>' : '') +
+            (opens.length ? '<p class="lunl">открывает ' + unlNames(opens) + '</p>' : '') + '</li>';
+        }).join("") + '</ol>' : '';
+        html += '<div class="q" id="q-' + q.id + '">' +
+          '<details class="qd"><summary><span class="qtitle" id="ql-' + q.id + '"><span class="chev" aria-hidden="true"></span><span><span class="qnum">' + q.idx + '.</span>' + esc(q.q) + '</span></span>' +
+          '<span class="wt" title="Доля практики в общей зрелости: ' + q.w + ' из 100"><i style="width:' + (q.w * 6) + 'px"></i>вес ' + q.w +
+          '<span class="lockmark" id="lkm-' + q.id + '" hidden>· заблокировано</span></span></summary>' +
+          '<div class="qdesc"><p>' + esc(q.d) + '</p><p class="lock" id="lk-' + q.id + '" hidden></p>' + ladder + rel + '</div></details>' +
+          '<div class="sl"><span class="rng" id="rg-' + q.id + '"><input type="range" id="r-' + q.id + '" ' + range + ' aria-labelledby="ql-' + q.id + '">' + ticks + '</span>' +
+          '<output id="o-' + q.id + '" for="r-' + q.id + '"></output></div>' +
+          '</div>';
+      });
+      html += '</div></div>';
+    }
+    $("levels").innerHTML = html;
+  }
+
+  function buildRoles() {
+    $("roles").innerHTML = ROLES.map(function (r) {
+      return '<div class="role"><label for="role-' + r.id + '">' + r.l + '<small>' + r.h + '</small></label>' +
+        '<select id="role-' + r.id + '">' + Object.keys(ROLE_STATE).map(function (k) {
+          return '<option value="' + k + '">' + ROLE_STATE[k] + '</option>';
+        }).join("") + '</select></div>';
+    }).join("");
+  }
+
+  function syncControls() {
+    $("hours").value = state.hours || "";
+    ROLES.forEach(function (r) { $("role-" + r.id).value = (state.roles || {})[r.id] || "sep"; });
+    $("sampleNote").hidden = !state.sample;
+    $("emptyNote").hidden = state.sample || Object.keys(state.answers).length > 0;
+  }
+
+  // ── Расчёт ──
+  function compute() {
+    // Заблокированный пункт не даёт баллов; блокировка каскадная, потому что зависимости идут раньше
+    // Требование шага может ссылаться на пункт ниже по списку, поэтому считаем в несколько проходов:
+    // потолок шага (caps) только уменьшается, так что расчёт сходится
+    var caps = {}, eff, locked;
+    QS.forEach(function (q) { if (q.steps) caps[q.id] = q.steps.length - 1; });
+    for (var pass = 0; pass < 8; pass++) {
+      eff = {}; locked = {};
+      QS.forEach(function (q) {
+        var bl = unmet(q.deps, eff);
+        locked[q.id] = bl;
+        var raw = state.answers[q.id] || 0;
+        // Пошаговый пункт считается по выбранному шагу, но не выше доступного
+        if (q.steps) raw = Math.min(stepIndex(q, raw), caps[q.id]) / (q.steps.length - 1);
+        eff[q.id] = bl.length ? 0 : raw;
+      });
+      var changed = false;
+      QS.forEach(function (q) {
+        if (!q.steps) return;
+        var cap = q.steps.length - 1;
+        for (var k = 1; k < q.steps.length; k++) {
+          if (unmet(q.steps[k].req, eff).length) { cap = k - 1; break; }
+        }
+        if (cap !== caps[q.id]) { caps[q.id] = cap; changed = true; }
+      });
+      if (!changed) break;
+    }
+
+    // Баллы взвешены: вес практики — её доля в общей зрелости (сумма весов 100)
+    var score = {}, pts = {}, lw = {}, index = 0, sub = { a: [], b: [] };
+    for (var l = 1; l <= MAXL; l++) {
+      pts[l] = 0; lw[l] = 0;
+      QS.filter(function (q) { return q.lv === l; }).forEach(function (q) {
+        pts[l] += q.w * eff[q.id]; lw[l] += q.w;
+        if (q.part) sub[q.part].push({ w: q.w, a: eff[q.id] });
+      });
+      score[l] = pts[l] / lw[l];
+      index += pts[l];
+    }
+    function avg(a) {
+      var sw = 0, s = 0;
+      a.forEach(function (x) { sw += x.w; s += x.w * x.a; });
+      return s / sw;
+    }
+    var current = 0;
+    for (var k = 1; k <= MAXL; k++) { if (score[k] >= THRESHOLD && current === k - 1) current = k; }
+    var target = Number(state.target);
+    var m = volumeFactor(Number(state.hours) || 0);
+    var roles = state.roles || {};
+    // Надбавка к шагу из-за ролей и пояснение к ней
+    var roleAdd = function (n) {
+      var add = 0, why = [];
+      ROLES.forEach(function (r) {
+        var k = roles[r.id] === "comb" ? 0 : roles[r.id] === "none" ? 1 : -1;
+        if (k < 0 || !r.step[n]) return;
+        add += r.step[n][k];
+        why.push(r.l.toLowerCase() + " — " + ROLE_STATE[roles[r.id]]);
+      });
+      return { f: 1 + add, why: why };
+    };
+    var g = function (s) { return 0.4 + 0.6 * (1 - s); };
+
+    // Пошаговый пункт даёт по задаче на каждый невыполненный шаг
+    var gaps = function (pred) {
+      var out = [];
+      QS.filter(pred).filter(function (q) { return eff[q.id] < 1; }).forEach(function (q) {
+        if (q.steps) {
+          for (var i = stepIndex(q, eff[q.id]) + 1; i < q.steps.length; i++) out.push({ text: q.steps[i].t, lv: q.lv, id: q.id, step: i });
+        } else {
+          out.push({ text: q.t, done: eff[q.id], lv: q.lv, id: q.id });
+        }
+      });
+      return out;
+    };
+
+    var steps = [];
+    if (target > current) {
+      var tails = gaps(function (q) { return q.lv <= current; });
+      steps.push({
+        n: 1, title: "Аудит и целевая модель", min: 2, max: 4, firm: true,
+        about: "Изучаем команду, процесс, среды и инструменты, фиксируем текущий этап и правила работы с данными. На выходе целевая модель и приоритизированная дорожная карта.",
+        tasks: [{ text: "Оценить структуру команды, роли, жизненный цикл разработки и инструменты" },
+                { text: "Определить, какие данные и каким моделям компания готова доверить" },
+                { text: "Согласовать целевую модель и план вложений по этапам" }]
+          .concat(tails.map(function (t) { return { text: "Закрыть хвосты: " + lowerFirst(t.text), tail: true, done: t.done, lv: t.lv, id: t.id, step: t.step }; }))
+      });
+
+      var prepLv = [];
+      for (var p = current + 1; p <= Math.min(4, target); p++) prepLv.push(p);
+      if (prepLv.length) {
+        var base = { 1: [1, 2], 2: [1, 2], 3: [2, 3], 4: [2, 4] }, pmin = 0, pmax = 0;
+        prepLv.forEach(function (p) { pmin += base[p][0] * g(score[p]); pmax += base[p][1] * g(score[p]); });
+        steps.push({
+          n: 2, title: "Подготовка базы", min: pmin, max: pmax, firm: false,
+          about: "Заводим базовые инструменты и вводим правила: базы разработчиков создаются из шаблонной, общая тестовая база подключена к тестовому контуру. Переводим первых разработчиков в 1С:EDT и Git, настраиваем первый конвейер. Строим на инструментах, которые уже есть у команды.",
+          tasks: gaps(function (q) { return prepLv.indexOf(q.lv) >= 0; })
+            .concat(roles.devops === "sep" ? [] : [{ text: "Назначить ответственного за конвейер сборки и выкладки" }])
+        });
+      }
+
+      if (target >= 5 && current < 5) {
+        steps.push({
+          n: 3, title: "Проверка на реальных задачах", min: 4 * g(score[5]) * m, max: 8 * g(score[5]) * m,
+          about: "Запускаем новый процесс на текущих задачах, например на очередном релизе. Каждое изменение проходит ревью, автотесты и приёмку заказчиком до выпуска.",
+          tasks: gaps(function (q) { return q.lv === 5; })
+            .concat(roles.tester === "sep" ? [] : [{ text: "Определить, кто отвечает за тестирование и приёмку, и заложить это в его загрузку" }])
+        });
+      } else if (prepLv.length) {
+        steps.push({
+          n: 3, title: "Проверка на реальных задачах", min: 2, max: 4,
+          about: "Проводим через новый процесс один релизный цикл, чтобы команда освоила практики на своей работе.",
+          tasks: [{ text: "Выпустить очередной релиз по новым правилам и через конвейер" }]
+        });
+      }
+
+      if (target === 6) {
+        var ga = g(avg(sub.a)), gb = g(avg(sub.b));
+        var ai = gaps(function (q) { return q.part === "a"; });
+        steps.push({
+          n: 4, title: "Подключение ИИ", min: 3 * ga, max: 6 * ga,
+          about: "Готовим контур для ИИ: выбираем модель, настраиваем обезличивание и правила доступа к данным. Ведущие разработчики решают реальные задачи с ИИ, фиксируем сроки и качество.",
+          tasks: ai
+        });
+        steps.push({
+          n: 5, title: "Масштабирование", min: 4 * gb * m, max: 8 * gb * m,
+          about: "Распространяем ИИ-разработку на всю команду, автоматизируем проверку качества кода и показываем эффект в трудозатратах: часы на задачу и число выпущенных задач.",
+          tasks: gaps(function (q) { return q.part === "b"; })
+        });
+      }
+
+      steps.forEach(function (s) {
+        var ra = roleAdd(s.n);
+        s.roleWhy = ra.why;
+        s.min = Math.max(1, Math.round(s.min * ra.f));
+        s.max = Math.max(s.min, Math.round(s.max * ra.f));
+      });
+    }
+
+    var aheadAI = current < 4 && eff.aiint > 0;
+    var ahead = [];
+    for (var h = current + 2; h <= MAXL; h++) if (score[h] > 0) ahead.push(h);
+
+    return { eff: eff, locked: locked, caps: caps, score: score, pts: pts, lw: lw, index: Math.round(index),
+             current: current, target: target, steps: steps, aheadAI: aheadAI, ahead: ahead };
+  }
+
+  function lowerFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+  function weeks(a, b) { return a === b ? a + " нед" : a + "–" + b + " нед"; }
+  function months(a, b) {
+    var r = function (x) { return Math.max(0.5, Math.round(x / 4.35 * 2) / 2); };
+    var f = function (x) { return String(x).replace(".", ","); };
+    var ma = r(a), mb = r(b);
+    return ma === mb ? "≈ " + f(ma) + " мес" : "≈ " + f(ma) + "–" + f(mb) + " мес";
+  }
+  function taskText(t) {
+    return t.done > 0 && t.done < 1 && !t.tail
+      ? "Доделать (сейчас " + pct(t.done) + "): " + lowerFirst(t.text)
+      : t.text;
+  }
+
+  // ── Отрисовка ──
+  function refreshQuiz(R) {
+    QS.forEach(function (q) {
+      var r = $("r-" + q.id), bl = R.locked[q.id], isL = bl.length > 0;
+      var v = state.answers[q.id] || 0;
+      r.disabled = isL;
+      if (q.steps) {
+        var n = q.steps.length - 1, cap = R.caps[q.id], idx = isL ? 0 : Math.min(stepIndex(q, v), cap);
+        if (document.activeElement !== r) r.value = String(idx);
+        $("o-" + q.id).textContent = "шаг " + idx + " из " + n;
+        $("o-" + q.id).title = q.steps[idx].l;
+        r.setAttribute("aria-valuetext", "Шаг " + idx + ": " + q.steps[idx].l);
+        $("ld-" + q.id).querySelectorAll("button").forEach(function (b, i) {
+          b.disabled = isL || i > cap;
+          b.className = i === idx ? "cur" : i < idx ? "done" : i > cap ? "blocked" : "";
+          b.setAttribute("aria-pressed", String(i === idx));
+          var note = $("lr-" + q.id + "-" + i);
+          if (note) {
+            var miss = unmet(q.steps[i].req, R.eff);
+            note.hidden = !miss.length;
+            note.innerHTML = miss.length ? "нужно: " + miss.map(depText).join("; ") : "";
+          }
+        });
+      } else {
+        if (document.activeElement !== r) r.value = String(Math.round((isL ? 0 : v) * 100));
+        $("o-" + q.id).textContent = isL ? "0%" : pct(v);
+      }
+      // Заливка: до последней вехи — оранжевая, после — зелёная; риски вех красятся так же
+      var val = isL ? 0 : (q.steps ? Math.min(stepIndex(q, v), R.caps[q.id]) / (q.steps.length - 1) : v);
+      var lastMile = q.miles.length ? q.miles[q.miles.length - 1] : 0;
+      r.style.setProperty("--v", String(val));
+      r.style.setProperty("--fc", isL ? "var(--line)" : val + 1e-9 < lastMile ? "var(--target)" : "var(--route)");
+      $("rg-" + q.id).querySelectorAll(".tick").forEach(function (t) {
+        t.classList.toggle("hit", !isL && val + 1e-9 >= Number(t.dataset.m));
+      });
+      $("q-" + q.id).classList.toggle("locked", isL);
+      var lk = $("lk-" + q.id);
+      lk.hidden = !isL;
+      lk.innerHTML = isL ? "<b>Заблокировано.</b> Сначала: " + bl.map(depText).join("; ") + "." : "";
+      $("lkm-" + q.id).hidden = !isL;
+    });
+    for (var l = 1; l <= MAXL; l++) {
+      var s = R.score[l], el = $("st-" + l);
+      var got = String(Math.round(R.pts[l] * 10) / 10).replace(".", ",");
+      el.className = "status " + (l <= R.current ? "done" : s > 0 ? "part" : "none");
+      el.textContent = (l <= R.current ? "Достигнут · " : s > 0 ? "В процессе · " : "Не начат · ") + got + " из " + R.lw[l];
+      $("lm-" + l).style.width = Math.round(s * 100) + "%";
+      $("lp-" + l).textContent = "выполнено " + Math.round(s * 100) + "%";
+    }
+  }
+
+  function render() {
+    var R = compute();
+    var tMin = 0, tMax = 0;
+    R.steps.forEach(function (s) { tMin += s.min; tMax += s.max; });
+
+    // Сводка
+    var done = R.target <= R.current;
+    $("summary").innerHTML =
+      '<div class="fact now"><span class="k">Вы здесь</span><span class="v">Этап ' + R.current + ' · ' + LEVELS[R.current].name + '</span></div>' +
+      '<div class="fact goal"><span class="k">Цель</span><span class="v">Этап ' + R.target + ' · ' + LEVELS[R.target].name + '</span></div>' +
+      '<div class="fact"><span class="k">Общая зрелость</span><span class="v">' + R.index + ' <small>из 100 баллов</small></span></div>' +
+      '<div class="fact"><span class="k">Путь</span><span class="v">' + (R.target === 0 ? "Стартовая точка" : done ? "Цель достигнута" : weeks(tMin, tMax) + ' <small>' + months(tMin, tMax) + '</small>') + '</span></div>';
+
+    // Станции
+    $("stations").innerHTML = LEVELS.map(function (L) {
+      var cls = ["st"];
+      if (L.n < R.current) cls.push("passed");
+      if (L.n === R.current) cls.push("here");
+      if (L.n >= R.current && L.n < R.target) cls.push("planned");
+      if (L.n === R.target && !done) cls.push("goal");
+      var p = L.n === 0 ? null : Math.round(R.score[L.n] * 100);
+      var chips = "";
+      if (L.n === R.current) chips += '<span class="chip here">Вы здесь</span>';
+      if (L.n === R.target && !done) chips += '<span class="chip goal">Цель</span>';
+      return '<li class="' + cls.join(" ") + '"><button type="button" data-lv="' + L.n + '" aria-pressed="' + (L.n === R.target) + '">' +
+        '<span class="dot" aria-hidden="true"></span>' +
+        '<span class="chips">' + chips + '</span>' +
+        '<span class="code">Этап ' + L.n + '</span>' +
+        '<span class="name">' + L.name + '</span>' +
+        '<span class="desc">' + L.desc + '</span>' +
+        (p === null ? '' : '<span class="meter" aria-hidden="true"><i style="width:' + p + '%"></i></span><span class="pct">выполнено ' + p + '%</span>') +
+        '</button></li>';
+    }).join("");
+
+    refreshQuiz(R);
+
+    // Предупреждения
+    var al = "";
+    if (R.aheadAI) {
+      al += '<div class="alert"><b>ИИ раньше процесса.</b> Команда уже пробует ИИ, но нет конвейера и ревью. Без них эффект не закрепится: сначала стабилизируем процесс, затем подключаем ИИ.</div>';
+    } else if (R.ahead.length) {
+      al += '<div class="alert"><b>Практики через этап.</b> Часть практик этапа ' + R.ahead.join(", ") + ' уже есть, но предыдущие этапы не закрыты. Их учтём в сроках.</div>';
+    }
+    if (R.target === 6 && R.current < 5 && !done) {
+      al += '<div class="alert calm"><b>Путь через все этапы.</b> ИИ подключаем, когда процесс работает стабильно, поэтому маршрут проходит через этапы ' + (R.current + 1) + '–5.</div>';
+    }
+    if (R.target === 0) {
+      al += '<div class="alert calm"><b>Этап 0 — стартовая точка.</b> С него начинает команда без инструментов, правил и автоматизации. Выберите на схеме этап 1–6, чтобы увидеть путь к нему.</div>';
+    } else if (done) {
+      al += '<div class="alert calm"><b>Цель уже достигнута.</b> Выберите на схеме следующий этап, чтобы увидеть путь к нему.</div>';
+    }
+    var rolesNot = ROLES.filter(function (r) { return (state.roles || {})[r.id] && state.roles[r.id] !== "sep"; });
+    if (rolesNot.length && !done && R.target !== 0) {
+      al += '<div class="alert"><b>Роли без отдельного человека:</b> ' + rolesNot.map(function (r) {
+        return r.l.toLowerCase() + ' (' + ROLE_STATE[state.roles[r.id]] + ')';
+      }).join(", ") + '. Сроки связанных шагов увеличены, а эта работа ляжет на тех, кто совмещает роли.</div>';
+    }
+    $("alerts").innerHTML = al;
+    var h = Number(state.hours) || 0;
+    $("hoursHint").textContent = h ? "≈ " + String(Math.round(h / 164 * 10) / 10).replace(".", ",") + " человек на полную ставку" : "Укажите, чтобы точнее оценить сроки раскатки";
+    $("total").textContent = done ? "" : "итого " + weeks(tMin, tMax);
+
+    // Диаграмма: позиции по средней оценке, подписи — диапазоны
+    var mids = R.steps.map(function (s) { return (s.min + s.max) / 2; });
+    var span = mids.reduce(function (a, b) { return a + b; }, 0);
+    var hand = R.steps.length ? Math.max(4, span * 0.25) : 0;
+    var full = span + hand || 1;
+    var x = 0, gh = "";
+    R.steps.forEach(function (s, i) {
+      var left = x / full * 100, w = mids[i] / full * 100;
+      gh += '<div class="g-row"><div class="g-label">Шаг ' + s.n + ' · ' + s.title + '<span class="w">' + weeks(s.min, s.max) + '</span></div>' +
+        '<div class="g-track"><div class="g-bar' + (s.firm ? '' : ' est') + '" style="left:' + left + '%;width:' + w + '%"></div></div></div>';
+      x += mids[i];
+    });
+    if (R.steps.length) {
+      var hl = Math.max(0, (span - mids[mids.length - 1]) / full * 100);
+      gh += '<div class="g-row"><div class="g-label">Передача и сопровождение<span class="w">до закрепления</span></div>' +
+        '<div class="g-track"><div class="g-bar hand" style="left:' + hl + '%;width:' + (100 - hl) + '%"></div></div></div>';
+      var ticks = "", step = full > 40 ? 2 : 1;
+      for (var mth = step; mth * 4.35 < full; mth += step) {
+        var pos = mth * 4.35 / full * 100;
+        if (pos > 96) break;
+        ticks += '<span style="left:' + pos + '%">' + mth + ' мес</span>';
+      }
+      gh += '<div class="g-axis" aria-hidden="true">' + ticks + '</div>';
+    }
+    $("gantt").innerHTML = gh;
+
+    // Карточки шагов
+    var sh = R.steps.map(function (s) {
+      var tasks = s.tasks.length ? '<ul class="tasks">' + s.tasks.map(function (t) {
+        var partial = t.done > 0 && t.done < 1;
+        return '<li class="' + (t.tail || partial ? 'tail' : '') + '">' + (t.id ? ref(t.id, t.step, true) + ' ' : '') + esc(taskText(t)) + '</li>';
+      }).join("") + '</ul>' : '<p class="about">Практики шага уже есть, остаётся закрепить их на реальных задачах.</p>';
+      return '<div class="step"><div class="step-head"><h3><span class="n">Шаг ' + s.n + '</span>' + s.title + '</h3>' +
+        '<span class="dur">' + weeks(s.min, s.max) + (s.firm ? '' : '<em>оценка</em>') + '</span></div>' +
+        '<p class="about">' + s.about + '</p>' +
+        (s.roleWhy && s.roleWhy.length ? '<p class="about">Срок увеличен: ' + esc(s.roleWhy.join(", ")) + '.</p>' : '') + tasks + '</div>';
+    }).join("");
+    if (R.steps.length) {
+      sh += '<div class="step"><div class="step-head"><h3><span class="n">Далее</span>Передача и сопровождение</h3><span class="dur">до закрепления</span></div>' +
+        '<p class="about">Обучаем разработчиков и специалистов сопровождения, документируем процесс и постепенно сокращаем своё участие, чтобы практики остались в команде.</p></div>';
+    }
+    $("steps").innerHTML = sh;
+
+    render.last = { R: R, tMin: tMin, tMax: tMax };
+  }
+
+  function summaryText() {
+    var d = render.last, R = d.R;
+    var lines = ["Карта зрелости 1С-разработки", "",
+      "Сейчас: этап " + R.current + " · " + LEVELS[R.current].name,
+      "Цель: этап " + R.target + " · " + LEVELS[R.target].name,
+      "Общая зрелость: " + R.index + " из 100 баллов",
+      "Команда: " + (state.hours ? state.hours + " ч/мес; " : "") + ROLES.map(function (r) {
+        return r.l.toLowerCase() + " — " + ROLE_STATE[(state.roles || {})[r.id] || "sep"];
+      }).join("; ")];
+    if (!R.steps.length) { lines.push("Цель уже достигнута."); return lines.join("\n"); }
+    lines.push("Срок: " + weeks(d.tMin, d.tMax) + " (" + months(d.tMin, d.tMax) + ")", "");
+    R.steps.forEach(function (s) {
+      lines.push("Шаг " + s.n + ". " + s.title + " — " + weeks(s.min, s.max) + (s.firm ? "" : " (оценка)"));
+      s.tasks.forEach(function (t) {
+        var num = t.id ? "[" + BYID[t.id].num + (t.step !== undefined ? ", шаг " + t.step : "") + "] " : "";
+        lines.push("  • " + num + taskText(t));
+      });
+    });
+    lines.push("Далее: передача и сопровождение до закрепления результата.");
+    return lines.join("\n");
+  }
+
+  // ── События ──
+  $("levels").addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.type !== "range") return;
+    var q = BYID[t.id.slice(2)];
+    if (q.steps) {
+      var cap = render.last ? render.last.R.caps[q.id] : q.steps.length - 1;
+      if (Number(t.value) > cap) t.value = String(cap);
+      setAnswer(q, Number(t.value) / (q.steps.length - 1));
+    } else {
+      setAnswer(q, Number(t.value) / 100);
+    }
+  });
+  $("levels").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-step]");
+    if (!b || b.disabled) return;
+    var q = BYID[b.dataset.q];
+    setAnswer(q, Number(b.dataset.step) / (q.steps.length - 1));
+  });
+  // Переход по ссылке на пункт: прокрутка, подсветка, фокус на ползунок
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a.ref");
+    if (!a) return;
+    e.preventDefault();
+    var row = $("q-" + a.dataset.ref);
+    if (!row) return;
+    row.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    var det = row.querySelector("details");
+    if (det && row.classList.contains("locked")) det.open = true;
+    row.classList.remove("flash");
+    void row.offsetWidth;
+    row.classList.add("flash");
+    setTimeout(function () { row.classList.remove("flash"); }, 1800);
+    var r = $("r-" + a.dataset.ref);
+    if (r && !r.disabled) { try { r.focus({ preventScroll: true }); } catch (err) {} }
+  });
+  function setAnswer(q, v) {
+    state.answers[q.id] = v;
+    state.sample = false;
+    $("sampleNote").hidden = true;
+    $("emptyNote").hidden = true;
+    save(); render();
+  }
+  $("stations").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-lv]");
+    if (!b) return;
+    state.target = Number(b.dataset.lv);
+    save(); render();
+  });
+  $("hours").addEventListener("input", function () { state.hours = Math.max(0, Number(this.value) || 0); save(); render(); });
+  $("roles").addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t.id || t.id.indexOf("role-") !== 0) return;
+    state.roles = state.roles || {};
+    state.roles[t.id.slice(5)] = t.value;
+    save(); render();
+  });
+  $("resetBtn").addEventListener("click", function () {
+    state = { answers: {}, roles: state.roles, hours: state.hours, target: state.target, sample: false };
+    syncControls(); $("emptyNote").hidden = false; save(); render();
+  });
+  $("sampleBtn").addEventListener("click", function () {
+    state = clone(SAMPLE); syncControls(); save(); render();
+  });
+  $("copyBtn").addEventListener("click", function () {
+    var text = summaryText(), fb = $("copyFallback");
+    var ok = function () { $("copied").textContent = "Скопировано"; fb.hidden = true; setTimeout(function () { $("copied").textContent = ""; }, 2500); };
+    var fail = function () { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); $("copied").textContent = "Выделите текст и скопируйте"; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fail);
+      else fail();
+    } catch (err) { fail(); }
+  });
+
+  buildQuiz();
+  buildRoles();
+  syncControls();
+  render();
+})();
+</script>
+
+</body>
+</html>
