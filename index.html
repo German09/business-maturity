@@ -186,6 +186,10 @@ select {
 .btn:hover { border-color: var(--ink); }
 .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.filebar-t { font-size: 13px; color: var(--muted); margin-right: 2px; }
+.filemsg { font-size: 13px; color: var(--route); }
+.filemsg.err { color: var(--warn); }
 
 .lvl { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .lvl-head {
@@ -411,6 +415,14 @@ select {
 
   <div class="work">
     <section class="quiz" aria-label="Опросник">
+      <div class="filebar">
+        <span class="filebar-t">Анкета</span>
+        <button class="btn" id="saveFileBtn" type="button">Скачать в файл</button>
+        <button class="btn" id="loadFileBtn" type="button">Загрузить из файла</button>
+        <input type="file" id="loadFile" accept=".json,application/json" hidden>
+        <span class="filemsg" id="fileMsg" aria-live="polite"></span>
+      </div>
+
       <div class="sample" id="sampleNote">
         <span>Показан пример ответов типичной команды. Замените их на свои.</span>
         <button class="btn" id="resetBtn" type="button">Очистить ответы</button>
@@ -1345,6 +1357,86 @@ select {
     var q = BYID[b.dataset.q];
     setAnswer(q, Number(b.dataset.step) / (q.steps.length - 1));
   });
+  // ── Анкета в файле ──
+  // В просмотрщике claude.ai файл отдаёт возможность downloads, на обычном сайте — ссылка на Blob
+  var FILE_FORMAT = "business-maturity";
+  var downloads = null;
+  try {
+    if (window.claude && window.claude.use) window.claude.use("downloads").then(function (d) { downloads = d; }, function () {});
+  } catch (e) {}
+  function fileMsg(text, err) {
+    var el = $("fileMsg");
+    el.textContent = text;
+    el.className = "filemsg" + (err ? " err" : "");
+  }
+  function questionnaire() {
+    return {
+      format: FILE_FORMAT, version: 1, savedAt: new Date().toISOString(),
+      answers: state.answers, roles: state.roles || {}, hours: state.hours || 0, target: state.target
+    };
+  }
+  $("saveFileBtn").addEventListener("click", function () {
+    var data = JSON.stringify(questionnaire(), null, 2);
+    var name = "karta-zrelosti-" + new Date().toISOString().slice(0, 10) + ".json";
+    if (downloads) {
+      downloads.save({ filename: name, data: data }).then(function () {
+        fileMsg("Анкета сохранена в файл " + name);
+      }, function (err) {
+        fileMsg(err && err.code === "declined" ? "Сохранение отменено" : "Скачать файл не удалось", !(err && err.code === "declined"));
+      });
+      return;
+    }
+    try {
+      var url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      fileMsg("Анкета сохранена в файл " + name);
+    } catch (e) {
+      fileMsg("Скачать файл не удалось", true);
+    }
+  });
+  $("loadFileBtn").addEventListener("click", function () { $("loadFile").click(); });
+  $("loadFile").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    this.value = "";
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var loaded = parseQuestionnaire(String(reader.result));
+      if (!loaded) { fileMsg("Файл не похож на анкету карты зрелости", true); return; }
+      state = loaded;
+      syncControls(); save(); render();
+      fileMsg("Анкета загружена из файла " + f.name);
+    };
+    reader.onerror = function () { fileMsg("Не удалось прочитать файл", true); };
+    reader.readAsText(f);
+  });
+  // Из файла берём только известные пункты, роли и допустимые значения
+  function parseQuestionnaire(text) {
+    var d;
+    try { d = JSON.parse(text); } catch (e) { return null; }
+    if (!d || d.format !== FILE_FORMAT || typeof d.answers !== "object" || !d.answers) return null;
+    var answers = {};
+    QS.forEach(function (q) {
+      var v = Number(d.answers[q.id]);
+      if (isFinite(v)) answers[q.id] = Math.min(1, Math.max(0, v));
+    });
+    var roles = {};
+    ROLES.forEach(function (r) {
+      var v = d.roles && d.roles[r.id];
+      if (v === "sep" || (typeof v === "string" && r.by.hasOwnProperty(v))) roles[r.id] = v;
+    });
+    var target = Math.round(Number(d.target));
+    return {
+      answers: answers, roles: roles,
+      hours: Math.max(0, Number(d.hours) || 0),
+      target: target >= 0 && target <= MAXL ? target : MAXL,
+      sample: false
+    };
+  }
+
   // Переход по ссылке на пункт: прокрутка, подсветка, фокус на ползунок
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.addEventListener("click", function (e) {
