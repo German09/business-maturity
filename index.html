@@ -256,7 +256,6 @@ select {
   background: var(--target); pointer-events: none;
 }
 .tick.hit { background: var(--route); }
-.q.locked .tick { background: var(--line); }
 .lunl { font-size: 12.5px; color: var(--muted); padding: 0 8px 4px 38px; }
 .ladder li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px); gap: 0 12px; align-items: start; }
 .lmain { min-width: 0; }
@@ -269,18 +268,13 @@ select {
 .lrq.ok .ref { color: var(--muted); }
 .lrq .ref { white-space: normal; }
 .lrq-n { color: var(--muted); }
-.ladder button.blocked { opacity: .5; }
 .sl output { font-family: var(--font-mono); font-size: 13px; font-weight: 600; min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
-.q.locked .qtitle { color: var(--muted); }
-.q.locked .sl input { cursor: not-allowed; opacity: .4; }
-.q.locked .sl output { color: var(--muted); font-weight: 400; }
 .ladder { list-style: none; margin: 2px 0 2px -8px; padding: 0; display: grid; gap: 2px; }
 .ladder button {
   width: 100%; display: flex; gap: 10px; align-items: baseline; text-align: left;
   background: none; border: 0; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13.5px; color: var(--muted);
 }
-.ladder button:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
-.ladder button:disabled { cursor: not-allowed; }
+.ladder button:hover { background: var(--bg); color: var(--ink); }
 .lnum {
   flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line);
   display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 11px; transform: translateY(4px);
@@ -289,9 +283,11 @@ select {
 .ladder button.done .lnum { border-color: var(--route); background: var(--route-soft); color: var(--route); }
 .ladder button.cur { color: var(--ink); font-weight: 600; background: var(--route-soft); }
 .ladder button.cur .lnum { border-color: var(--route); background: var(--route); color: var(--surface); }
-.lock { font-size: 12.5px; }
-.lock b { color: var(--ink); font-weight: 500; }
-.lockmark { margin-left: 2px; }
+/* Отмечен шаг, требования которого не выполнены: не блокируем, только подсвечиваем */
+.ladder button.gap .lnum { border-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+.lock { font-size: 12.5px; background: var(--warn-soft); border-radius: 8px; padding: 6px 10px; }
+.lock b { color: var(--warn); font-weight: 600; }
+.lockmark { margin-left: 2px; color: var(--warn); }
 
 /* Ссылки на пункты: отдельный цвет, номер пункта моноширинным */
 .qnum {
@@ -472,7 +468,7 @@ select {
   <footer class="foot">
     <p>Ползунок показывает, насколько практика выполнена: от 0 до 100%. Вес практики — её доля в общей зрелости, сумма весов равна 100. Практика даёт баллы пропорционально проценту выполнения. Больше весят практики, на которые опираются следующие этапы: Git, автосборка, статический анализ, код-ревью.</p>
     <p>Риска на ползунке — веха: после неё пункт открывает следующие практики. Пока веха не пройдена, полоса оранжевая, после — зелёная. У пошаговых пунктов вехи стоят на тех шагах, которые что-то открывают.</p>
-    <p>Некоторые практики невозможны без других: например, автосборка без Git. Такой пункт заблокирован и не даёт баллов, пока нужные практики не выполнены хотя бы на 50%, а переход на EDT и Git не дошёл до нужного шага. Откройте описание пункта, чтобы увидеть, что он требует и что открывает.</p>
+    <p>Практики опираются друг на друга: например, автосборка обычно идёт после Git. Требования не ограничивают ответы: отмечайте, как есть на самом деле, и пункт даст свои баллы. Если отмеченное опирается на то, что ещё не сделано (нужная практика выполнена меньше чем на 50% или переход на EDT и Git не дошёл до нужного шага), пункт подсвечивается, а недостающее показывается в описании. Откройте описание пункта, чтобы увидеть, что он требует и что открывает.</p>
     <p>Баланс «применимость ИИ ↔ управляемость» сравнивает, насколько ИИ уже применяется в бизнес-решении (агент, поддержка, пользователи, MCP), и насколько команда это контролирует (проверки в конвейере, защита среды, ревью, автотесты, критерии безопасности, правила ИИ-разработки, спецификации, управляемость в темпе ИИ). Применимость может опережать управляемость не больше чем на 15 пунктов, иначе бизнес-решение рискует стать неуправляемым. Шкала «В цели» показывает баланс, который получится, когда цель будет достигнута.</p>
     <p>Этап считается достигнутым, когда набрано не меньше 75% его баллов (отметка на полосе прогресса) и все предыдущие этапы уже достигнуты.</p>
     <p>Срок аудита (2–4 недели) задан методикой, подготовка базы занимает по ней 4–8 недель, плюс 1–2 недели, если базовых инструментов ещё нет. Сроки следующих шагов ориентировочные: они зависят от того, сколько уже сделано, от объёма команды в часах и от того, какие роли в ней совмещаются, и уточняются на аудите.</p>
@@ -549,7 +545,7 @@ select {
       d: "Одна общая база для тестирования, подключённая к тестовому контуру: тестовые обмены, интеграции, свежая копия данных. 100% — перед выпуском каждое изменение проверяется в этой базе вместе с интеграциями." },
     { id: "cfgdev", s: "Разработка в конфигурации", w: 3, lv: 2, deps: [],
       q: "Разработка ведётся в конфигурации, а не в расширении",
-      d: "Частый неправильный подход: у каждой базы своё расширение, и вся разработка идёт только в нём. Так выглядит проще, но процесс ломается: срочные исправления выпускаются расширениями, а расширение может заимствовать и перехватывать только объекты конфигурации, не другого расширения. Исправить код, который живёт в расширении, исправлением-расширением нельзя. Пока разработка в расширении, правила выпуска срочных исправлений и всё, что на них опирается, заблокированы. Отметьте последний выполненный шаг.",
+      d: "Частый неправильный подход: у каждой базы своё расширение, и вся разработка идёт только в нём. Так выглядит проще, но процесс ломается: срочные исправления выпускаются расширениями, а расширение может заимствовать и перехватывать только объекты конфигурации, не другого расширения. Исправить код, который живёт в расширении, исправлением-расширением нельзя. Пока разработка в расширении, правила выпуска срочных исправлений и всё, что на них опирается, не работают: карта подсветит их как невыполненные требования. Отметьте последний выполненный шаг.",
       steps: [
         { l: "Вся разработка ведётся в расширении своей базы" },
         { l: "Новые доработки пишутся в конфигурации, старые остаются в расширении", t: "Писать новые доработки в конфигурации, а не в расширении базы" },
@@ -920,7 +916,7 @@ select {
         html += '<div class="q" id="q-' + q.id + '">' +
           '<details class="qd"><summary><span class="qtitle" id="ql-' + q.id + '"><span class="chev" aria-hidden="true"></span><span><span class="qnum">' + q.idx + '.</span>' + esc(q.q) + '</span></span>' +
           '<span class="wt" title="Доля практики в общей зрелости: ' + q.w + ' из 100"><i style="width:' + (q.w * 6) + 'px"></i>вес ' + q.w +
-          '<span class="lockmark" id="lkm-' + q.id + '" hidden>· заблокировано</span></span></summary>' +
+          '<span class="lockmark" id="lkm-' + q.id + '" hidden>· не выполнены требования</span></span></summary>' +
           '<div class="qdesc"><p>' + esc(q.d) + '</p><p class="lock" id="lk-' + q.id + '" hidden></p>' + ladder + rel + '</div></details>' +
           '<div class="sl"><span class="rng" id="rg-' + q.id + '"><input type="range" id="r-' + q.id + '" ' + range + ' aria-labelledby="ql-' + q.id + '">' + ticks + '</span>' +
           '<output id="o-' + q.id + '" for="r-' + q.id + '"></output></div>' +
@@ -959,32 +955,23 @@ select {
 
   // ── Расчёт ──
   function compute() {
-    // Заблокированный пункт не даёт баллов; блокировка каскадная, потому что зависимости идут раньше
-    // Требование шага может ссылаться на пункт ниже по списку, поэтому считаем в несколько проходов:
-    // потолок шага (caps) только уменьшается, так что расчёт сходится
-    var caps = {}, eff, locked;
-    QS.forEach(function (q) { if (q.steps) caps[q.id] = q.steps.length - 1; });
-    for (var pass = 0; pass < 8; pass++) {
-      eff = {}; locked = {};
-      QS.forEach(function (q) {
-        var bl = unmet(q.deps, eff);
-        locked[q.id] = bl;
-        var raw = state.answers[q.id] || 0;
-        // Пошаговый пункт считается по выбранному шагу, но не выше доступного
-        if (q.steps) raw = Math.min(stepIndex(q, raw), caps[q.id]) / (q.steps.length - 1);
-        eff[q.id] = bl.length ? 0 : raw;
-      });
-      var changed = false;
-      QS.forEach(function (q) {
-        if (!q.steps) return;
-        var cap = q.steps.length - 1;
-        for (var k = 1; k < q.steps.length; k++) {
-          if (unmet(q.steps[k].req, eff).length) { cap = k - 1; break; }
-        }
-        if (cap !== caps[q.id]) { caps[q.id] = cap; changed = true; }
-      });
-      if (!changed) break;
-    }
+    // Текущее состояние засчитывается так, как отмечено: процессы в проектах гибче модели.
+    // Требования не блокируют ответ, а только подсвечиваются (miss, stepMiss) и попадают в дорожную карту
+    var eff = {}, miss = {}, stepMiss = {};
+    QS.forEach(function (q) {
+      var raw = state.answers[q.id] || 0;
+      eff[q.id] = q.steps ? stepIndex(q, raw) / (q.steps.length - 1) : raw;
+    });
+    // Требование шага может ссылаться на пункт ниже по списку, поэтому проверяем после расчёта всех ответов
+    QS.forEach(function (q) {
+      miss[q.id] = eff[q.id] > 0 ? unmet(q.deps, eff) : [];
+      if (!q.steps) return;
+      stepMiss[q.id] = {};
+      for (var k = 1; k <= stepIndex(q, eff[q.id]); k++) {
+        var m = unmet(q.steps[k].req, eff);
+        if (m.length) stepMiss[q.id][k] = m;
+      }
+    });
 
     // Баллы взвешены: вес практики — её доля в общей зрелости (сумма весов 100)
     var score = {}, pts = {}, lw = {}, index = 0, sub = { a: [], b: [] };
@@ -1112,7 +1099,7 @@ select {
     var ahead = [];
     for (var h = current + 2; h <= MAXL; h++) if (score[h] > 0) ahead.push(h);
 
-    return { eff: eff, locked: locked, caps: caps, score: score, pts: pts, lw: lw, index: Math.round(index),
+    return { eff: eff, miss: miss, stepMiss: stepMiss, score: score, pts: pts, lw: lw, index: Math.round(index),
              current: current, target: target, steps: steps, aheadAI: aheadAI, ahead: ahead };
   }
 
@@ -1133,18 +1120,19 @@ select {
   // ── Отрисовка ──
   function refreshQuiz(R) {
     QS.forEach(function (q) {
-      var r = $("r-" + q.id), bl = R.locked[q.id], isL = bl.length > 0;
-      var v = state.answers[q.id] || 0;
-      r.disabled = isL;
+      var r = $("r-" + q.id), v = state.answers[q.id] || 0;
+      // Пункт отмечен, хотя то, на что он опирается, не сделано: подсвечиваем, ответ не трогаем
+      var need = R.miss[q.id].map(depText), val;
       if (q.steps) {
-        var n = q.steps.length - 1, cap = R.caps[q.id], idx = isL ? 0 : Math.min(stepIndex(q, v), cap);
+        var n = q.steps.length - 1, idx = stepIndex(q, v), sm = R.stepMiss[q.id];
+        val = idx / n;
         if (document.activeElement !== r) r.value = String(idx);
         $("o-" + q.id).textContent = "шаг " + idx + " из " + n;
         $("o-" + q.id).title = q.steps[idx].l;
         r.setAttribute("aria-valuetext", "Шаг " + idx + ": " + q.steps[idx].l);
+        Object.keys(sm).forEach(function (k) { need.push("для шага " + k + " — " + sm[k].map(depText).join(", ")); });
         $("ld-" + q.id).querySelectorAll("button").forEach(function (b, i) {
-          b.disabled = isL || i > cap;
-          b.className = i === idx ? "cur" : i < idx ? "done" : i > cap ? "blocked" : "";
+          b.className = (i === idx ? "cur" : i < idx ? "done" : "") + (sm[i] ? " gap" : "");
           b.setAttribute("aria-pressed", String(i === idx));
           var note = $("lr-" + q.id + "-" + i);
           if (note) {
@@ -1156,22 +1144,23 @@ select {
           }
         });
       } else {
-        if (document.activeElement !== r) r.value = String(Math.round((isL ? 0 : v) * 100));
-        $("o-" + q.id).textContent = isL ? "0%" : pct(v);
+        val = v;
+        if (document.activeElement !== r) r.value = String(Math.round(v * 100));
+        $("o-" + q.id).textContent = pct(v);
       }
       // Заливка: до последней вехи — оранжевая, после — зелёная; риски вех красятся так же
-      var val = isL ? 0 : (q.steps ? Math.min(stepIndex(q, v), R.caps[q.id]) / (q.steps.length - 1) : v);
       var lastMile = q.miles.length ? q.miles[q.miles.length - 1] : 0;
       r.style.setProperty("--v", String(val));
-      r.style.setProperty("--fc", isL ? "var(--line)" : val + 1e-9 < lastMile ? "var(--target)" : "var(--route)");
+      r.style.setProperty("--fc", val + 1e-9 < lastMile ? "var(--target)" : "var(--route)");
       $("rg-" + q.id).querySelectorAll(".tick").forEach(function (t) {
-        t.classList.toggle("hit", !isL && val + 1e-9 >= Number(t.dataset.m));
+        t.classList.toggle("hit", val + 1e-9 >= Number(t.dataset.m));
       });
-      $("q-" + q.id).classList.toggle("locked", isL);
+      var isW = need.length > 0;
+      $("q-" + q.id).classList.toggle("warn", isW);
       var lk = $("lk-" + q.id);
-      lk.hidden = !isL;
-      lk.innerHTML = isL ? "<b>Заблокировано.</b> Сначала: " + bl.map(depText).join("; ") + "." : "";
-      $("lkm-" + q.id).hidden = !isL;
+      lk.hidden = !isW;
+      lk.innerHTML = isW ? "<b>Не выполнены требования.</b> Ответ засчитан как есть, но обычно сначала делают: " + need.join("; ") + "." : "";
+      $("lkm-" + q.id).hidden = !isW;
     });
     for (var l = 1; l <= MAXL; l++) {
       var s = R.score[l], el = $("st-" + l);
@@ -1245,6 +1234,13 @@ select {
       al += '<div class="alert"><b>ИИ раньше процесса.</b> Агент уже правит конфигурацию, но нет конвейера и ревью. Без них эффект не закрепится: сначала стабилизируем процесс, затем подключаем ИИ.</div>';
     } else if (R.ahead.length) {
       al += '<div class="alert"><b>Практики через этап.</b> Часть практик этапа ' + R.ahead.join(", ") + ' уже есть, но предыдущие этапы не закрыты. Их учтём в сроках.</div>';
+    }
+    var gapIds = QS.filter(function (q) {
+      return R.miss[q.id].length || (q.steps && Object.keys(R.stepMiss[q.id]).length);
+    }).map(function (q) { return q.id; });
+    if (gapIds.length) {
+      al += '<div class="alert"><b>Не выполнены требования.</b> Отмечены практики, которые опираются на ещё не сделанное: ' + names(gapIds) +
+        '. Ответы засчитаны как есть; проверьте их и начните путь с недостающего.</div>';
     }
     if (R.target >= 6 && R.current < 5 && !done) {
       al += '<div class="alert calm"><b>Путь через все этапы.</b> ИИ подключаем, когда процесс работает стабильно, поэтому маршрут проходит через этапы ' + (R.current + 1) + '–5.</div>';
@@ -1343,17 +1339,11 @@ select {
     var t = e.target;
     if (t.type !== "range") return;
     var q = BYID[t.id.slice(2)];
-    if (q.steps) {
-      var cap = render.last ? render.last.R.caps[q.id] : q.steps.length - 1;
-      if (Number(t.value) > cap) t.value = String(cap);
-      setAnswer(q, Number(t.value) / (q.steps.length - 1));
-    } else {
-      setAnswer(q, Number(t.value) / 100);
-    }
+    setAnswer(q, Number(t.value) / (q.steps ? q.steps.length - 1 : 100));
   });
   $("levels").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-step]");
-    if (!b || b.disabled) return;
+    if (!b) return;
     var q = BYID[b.dataset.q];
     setAnswer(q, Number(b.dataset.step) / (q.steps.length - 1));
   });
@@ -1447,7 +1437,7 @@ select {
     if (!row) return;
     row.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
     var det = row.querySelector("details");
-    if (det && row.classList.contains("locked")) det.open = true;
+    if (det && row.classList.contains("warn")) det.open = true;
     row.classList.remove("flash");
     void row.offsetWidth;
     row.classList.add("flash");
