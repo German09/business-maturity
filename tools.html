@@ -72,41 +72,37 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .k-l { --kb: var(--route-soft); --kf: var(--route); }
 .k-p { --kb: var(--ref-soft); --kf: var(--ref); }
 .k-a { --kb: var(--target-soft); --kf: var(--target); }
-.types { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.types .lbl { font-size: 13px; color: var(--muted); margin-right: 4px; }
-.tf {
-  border: 1px solid var(--line); background: var(--kb); color: var(--kf); border-radius: 999px;
-  padding: 3px 12px; font-size: 13px; font-weight: 500; cursor: pointer;
-}
-.tf[aria-pressed="false"] { background: var(--surface); color: var(--muted); text-decoration: line-through; }
 
-/* ── Пирамида: ярусы — трапеции одного треугольника, наклон считает скрипт по высоте ярусов ── */
-.pyr { position: relative; display: grid; gap: 4px; padding-top: 4px; }
+/* ── Пирамида: ярусы — трапеции одного треугольника, наклон считает скрипт по высоте ярусов.
+   Цвет яруса — доля основного цвета (--tone): к основанию плотнее, вершина с агентом — своим цветом ── */
+.pyr { position: relative; display: grid; gap: 3px; padding-top: 8px; }
 .tier {
-  background: var(--route-soft); padding: 10px 0 12px;
-  display: grid; justify-items: center; align-content: start; gap: 6px; min-width: 0;
+  --tone: 14%;
+  background: var(--route-soft);
+  background: color-mix(in srgb, var(--route) var(--tone), var(--surface));
+  padding: 14px 0 16px; display: grid; justify-items: center; align-content: start; gap: 9px; min-width: 0;
 }
-.tier.agent { background: var(--target-soft); }
-.tl { font-size: 12.5px; color: var(--muted); text-align: center; }
-.tl b { font-weight: 600; color: var(--route); }
-.tier.agent .tl b { color: var(--target); }
-.chs { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.tier.agent { background: var(--target-soft); background: color-mix(in srgb, var(--target) 26%, var(--surface)); }
+.tl { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.35; }
+.tl b { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.chs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 /* --s — масштаб плашки по числу закрываемых практик */
 .ch {
   --s: 1;
   display: inline-flex; align-items: center; gap: calc(6px * var(--s)); border: 1px solid var(--line); border-radius: 999px;
   background: var(--surface); padding: calc(3px * var(--s)) calc(8px * var(--s)) calc(3px * var(--s)) calc(4px * var(--s));
   font-size: calc(13px * var(--s)); font-weight: 500; cursor: pointer; white-space: nowrap;
-  box-shadow: inset 3px 0 0 var(--kf);
+  border-color: transparent; box-shadow: 0 1px 2px rgb(0 0 0 / .12);
 }
 .ch .ico { width: calc(20px * var(--s)); height: calc(20px * var(--s)); border-radius: calc(5px * var(--s)); }
-.other { display: grid; gap: 6px; justify-items: center; border-top: 1px dashed var(--line); padding-top: 12px; }
+.other { text-align: center; font-size: 12.5px; color: var(--muted); }
+.other a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
+.other a:hover { color: var(--ref); }
 .ch .cv {
-  font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--route); background: var(--route-soft);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--muted); background: var(--bg);
   border-radius: 999px; padding: 0 6px; font-variant-numeric: tabular-nums;
 }
-.ch:hover { border-color: var(--kf); }
-.ch.dim { opacity: .3; }
+.ch:hover { border-color: var(--route); }
 .ico {
   width: 20px; height: 20px; border-radius: 5px; flex: none; object-fit: contain; background: var(--surface);
   display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--kf);
@@ -137,7 +133,7 @@ span.ico { background: var(--kb); }
   .card { padding: 16px; }
   /* На телефоне в пирамиде только иконки: имя — в подсказке и в таблице */
   .ch .nm { display: none; }
-  .ch { padding: 3px; box-shadow: none; border-color: var(--kf); }
+  .ch { padding: 3px 6px 3px 3px; }
   .tbl thead { display: none; }
   .tbl, .tbl tbody, .tbl tr, .tbl td { display: block; }
   .tbl tr { border-bottom: 1px solid var(--line); padding: 10px 0; display: grid; gap: 6px; }
@@ -160,9 +156,8 @@ span.ico { background: var(--kb); }
   </header>
 
   <section class="card" id="pyrcard" aria-label="Пирамида инструментов">
-    <div class="types" id="types"><span class="lbl">Тип:</span></div>
     <div class="pyr" id="pyr"></div>
-    <div class="other" id="other"></div>
+    <p class="other" id="other"></p>
     <p class="note">Число на плашке — сколько практик карты закрывает продукт: чем их больше, тем крупнее плашка. Нажмите на продукт, чтобы перейти к нему в таблице.</p>
   </section>
 
@@ -247,12 +242,13 @@ span.ico { background: var(--kb); }
     .concat(BANDS.map(function (b, i) {
       return { title: b.title, sub: b.sub, list: MAIN.filter(function (t) { return t.k !== "a" && bandOf(t) === i; }) };
     })).filter(function (tr) { return tr.list.length; });
-  $("pyr").innerHTML = tiers.map(function (tr) {
-    return '<div class="tier' + (tr.agent ? ' agent' : '') + '"><div class="tl"><b>' + tr.title + '</b> · ' + tr.sub + '</div><div class="chs">' +
+  $("pyr").innerHTML = tiers.map(function (tr, i) {
+    return '<div class="tier' + (tr.agent ? ' agent' : '') + '" style="--tone:' + (8 + 8 * i) + '%"><div class="tl"><b>' + tr.title + '</b>' + tr.sub + '</div><div class="chs">' +
       tr.list.map(function (t) { return chip(t, Math.round((0.95 + 0.06 * t.cov.length) * 100) / 100); }).join("") + '</div></div>';
   }).join("");
-  $("other").innerHTML = OTHER.length ? '<p class="tl"><b>Прочее</b> · ' + OTHER_NOTE + '</p><div class="chs">' +
-    OTHER.map(function (t) { return chip(t, 1); }).join("") + '</div>' : '';
+  $("other").innerHTML = OTHER.length ? 'Прочее: ' + OTHER.map(function (t) {
+    return '<a href="#t-' + t.id + '" title="' + esc(t.d) + '">' + esc(t.n) + '</a>';
+  }).join(", ") : '';
 
   // Пирамида: ширина растёт линейно от вершины (APEX от ширины) к основанию. Содержимое яруса не шире его
   // верхней кромки, а высота яруса зависит от ширины — поэтому раскладка повторяется, пока высота не устоится
@@ -304,25 +300,6 @@ span.ico { background: var(--kb); }
   }
   $("rows").innerHTML = MAIN.map(row).join("") +
     (OTHER.length ? '<tr class="sep"><td colspan="6">Прочее — ' + OTHER_NOTE + '</td></tr>' + OTHER.map(row).join("") : "");
-
-  // ── Фильтр по типу ──
-  var on = { s: true, l: true, p: true, a: true };
-  $("types").insertAdjacentHTML("beforeend", KINDS.filter(function (x) {
-    return LIST.some(function (t) { return t.k === x.k; });
-  }).map(function (x) {
-    return '<button type="button" class="tf k-' + x.k + '" data-k="' + x.k + '" aria-pressed="true">' + x.name + '</button>';
-  }).join(""));
-  $("types").addEventListener("click", function (e) {
-    var b = e.target.closest(".tf");
-    if (!b) return;
-    var k = b.dataset.k;
-    on[k] = !on[k];
-    b.setAttribute("aria-pressed", String(on[k]));
-    LIST.forEach(function (t) {
-      $("t-" + t.id).hidden = !on[t.k];
-      document.querySelector('.ch[data-id="' + t.id + '"]').classList.toggle("dim", !on[t.k]);
-    });
-  });
 
   // Переход из пирамиды к строке таблицы
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
