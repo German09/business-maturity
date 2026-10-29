@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Инструменты карты зрелости бизнес-решений на 1С: пирамида по покрытию практик, типы, аналоги, лицензии и ссылки на сайты.">
+<title>Инструменты карты зрелости</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: пирамида инструментов (внизу — закрывающие больше практик, наверху — ИИ-агент), под ней таблица. На узком экране строки таблицы становятся карточками. */
+:root {
+  --bg: #F3F5F3;
+  --surface: #FFFFFF;
+  --ink: #15211D;
+  --muted: #5A6A63;
+  --line: #D3DBD7;
+  --route: #0E7A66;
+  --route-soft: #D5EEE7;
+  --target: #B05E08;
+  --target-soft: #F7E5CF;
+  --ref: #3557B8;
+  --ref-soft: #E2E8F8;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+    --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+    --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+  --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+  --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.page {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 56px;
+  display: grid; gap: 28px;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+a { color: var(--ref); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; border-radius: 4px; }
+
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.head { display: grid; gap: 12px; max-width: 75ch; }
+.head h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -.01em; }
+.lead { color: var(--muted); font-size: 16px; }
+.back { font-size: 14px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 16px; min-width: 0; }
+.card h2 { font-size: 18px; font-weight: 600; }
+.note { font-size: 13.5px; color: var(--muted); max-width: 90ch; }
+
+/* Типы: софт — нейтральный, библиотека — зелёный, плагин — синий, ИИ-агент — оранжевый */
+.k-s { --kb: var(--bg); --kf: var(--ink); }
+.k-l { --kb: var(--route-soft); --kf: var(--route); }
+.k-p { --kb: var(--ref-soft); --kf: var(--ref); }
+.k-a { --kb: var(--target-soft); --kf: var(--target); }
+
+/* ── Пирамида: ярусы — трапеции одного треугольника, наклон считает скрипт по высоте ярусов.
+   Цвет яруса — доля основного цвета (--tone): к основанию плотнее, вершина с агентом — своим цветом ── */
+.pyr { position: relative; display: grid; gap: 3px; padding-top: 8px; }
+.tier {
+  --tone: 14%;
+  background: var(--route-soft);
+  background: color-mix(in srgb, var(--route) var(--tone), var(--surface));
+  padding: 14px 0 16px; display: grid; justify-items: center; align-content: start; gap: 9px; min-width: 0;
+}
+.tier.agent { background: var(--target-soft); background: color-mix(in srgb, var(--target) 26%, var(--surface)); }
+.tl { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.35; }
+.tl b { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.chs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+/* --s — масштаб плашки по числу закрываемых практик */
+.ch {
+  --s: 1;
+  display: inline-flex; align-items: center; gap: calc(6px * var(--s)); border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); padding: calc(3px * var(--s)) calc(8px * var(--s)) calc(3px * var(--s)) calc(4px * var(--s));
+  font-size: calc(13px * var(--s)); font-weight: 500; cursor: pointer; white-space: nowrap;
+  border-color: transparent; box-shadow: 0 1px 2px rgb(0 0 0 / .12);
+}
+.ch .ico { width: calc(20px * var(--s)); height: calc(20px * var(--s)); border-radius: calc(5px * var(--s)); }
+.other { text-align: center; font-size: 12.5px; color: var(--muted); }
+.other a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
+.other a:hover { color: var(--ref); }
+.ch .cv {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--muted); background: var(--bg);
+  border-radius: 999px; padding: 0 6px; font-variant-numeric: tabular-nums;
+}
+.ch:hover { border-color: var(--route); }
+.ico {
+  width: 20px; height: 20px; border-radius: 5px; flex: none; object-fit: contain; background: var(--surface);
+  display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--kf);
+}
+span.ico { background: var(--kb); }
+.ico.lg { width: 32px; height: 32px; border-radius: 8px; font-size: 14px; }
+
+/* ── Таблица ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tbl th { text-align: left; font-weight: 500; font-size: 12.5px; color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px; white-space: nowrap; }
+.tbl td { border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+.tbl tr.sep td { font-size: 13px; font-weight: 600; color: var(--muted); padding-top: 22px; }
+.tbl tr.flash td { background: var(--ref-soft); }
+.tool { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 4px 10px; min-width: 220px; }
+.tool .nm { font-weight: 600; font-size: 14.5px; }
+.tool .ds { grid-column: 2; color: var(--muted); font-size: 13px; }
+.tool .parts { grid-column: 2; font-size: 13px; color: var(--muted); }
+.tool .lnk { grid-column: 2; font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.kind { display: inline-block; background: var(--kb); color: var(--kf); border-radius: 999px; padding: 1px 9px; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.cnt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; color: var(--route); text-align: center; }
+.covs { display: flex; flex-wrap: wrap; gap: 2px 8px; min-width: 150px; }
+.covs a { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; }
+.alts, .lic { font-size: 13px; color: var(--muted); }
+.alts a { white-space: nowrap; }
+.foot { font-size: 13px; color: var(--muted); max-width: 85ch; display: grid; gap: 6px; }
+
+@media (max-width: 760px) {
+  .card { padding: 16px; }
+  /* На телефоне в пирамиде только иконки: имя — в подсказке и в таблице */
+  .ch .nm { display: none; }
+  .ch { padding: 3px 6px 3px 3px; }
+  .tbl thead { display: none; }
+  .tbl, .tbl tbody, .tbl tr, .tbl td { display: block; }
+  .tbl tr { border-bottom: 1px solid var(--line); padding: 10px 0; display: grid; gap: 6px; }
+  .tbl td { border: 0; padding: 0; }
+  .tbl td[data-h]::before { content: attr(data-h) ": "; color: var(--muted); font-size: 12.5px; }
+  .cnt { text-align: left; }
+  .tool { min-width: 0; }
+  .covs { min-width: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="head">
+    <p class="eyebrow">Карта зрелости бизнес-решений на 1С</p>
+    <h1>Инструменты</h1>
+    <p class="lead">Чем закрывать практики карты. Здесь только крупные продукты: утилиты и плагины, которые работают в их составе, указаны в описании. Внизу пирамиды — продукты, на которых держится больше всего практик, наверху — ИИ-агент: он работает с остальными продуктами через MCP. Модели указаны у агента — без него они не нужны. Из группы аналогов обычно хватает одного инструмента.</p>
+    <p class="back"><a href="index.html">← К карте зрелости</a></p>
+  </header>
+
+  <section class="card" id="pyrcard" aria-label="Пирамида инструментов">
+    <div class="pyr" id="pyr"></div>
+    <p class="other" id="other"></p>
+    <p class="note">Число на плашке — сколько практик карты закрывает продукт: чем их больше, тем крупнее плашка. Нажмите на продукт, чтобы перейти к нему в таблице.</p>
+  </section>
+
+  <section class="card" aria-label="Таблица инструментов">
+    <h2>Кто что закрывает</h2>
+    <table class="tbl">
+      <thead><tr><th>Инструмент</th><th>Тип</th><th>Практик</th><th>Что закрывает</th><th>Аналоги</th><th>Лицензия</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <footer class="foot">
+    <p>Номера практик ведут к пунктам анкеты на карте. Тип: софт ставится и запускается отдельно; библиотека встраивается в конфигурацию или код; плагин расширяет другую программу.</p>
+    <p>Название инструмента и аналоги ведут на их страницы. Если иконка не загрузилась, показывается первая буква названия.</p>
+  </footer>
+</div>
+
+<script src="model.js"></script>
+<script>
+(function () {
+  var QS = BM.QS, TOOLS = BM.TOOLS, USE = BM.USE, LS = BM.LS;
+  var KINDS = [{ k: "s", name: "софт" }, { k: "l", name: "библиотека" }, { k: "p", name: "плагин" }, { k: "a", name: "ИИ-агент" }];
+  var KNAME = {};
+  KINDS.forEach(function (x) { KNAME[x.k] = x.name; });
+  var LOGOS = "https://landscape1c.ru/logos/";
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // Номер пункта: этап.порядковый номер внутри этапа — как на карте
+  var BYID = {};
+  QS.forEach(function (q) { BYID[q.id] = q; });
+  for (var l = 1; l <= 7; l++) QS.filter(function (q) { return q.lv === l; }).forEach(function (q, i) { q.num = l + "." + (i + 1); });
+
+  // Покрытие: практика засчитывается инструменту, если он указан у неё или у любого её шага
+  var LIST = Object.keys(TOOLS).map(function (id) { var t = TOOLS[id]; t.id = id; t.cov = []; return t; });
+  QS.forEach(function (q) {
+    var u = USE[q.id] || [], all = Array.isArray(u) ? u : [].concat.apply([], Object.keys(u).map(function (k) { return u[k]; }));
+    all.forEach(function (t) { if (TOOLS[t].cov.indexOf(q.id) < 0) TOOLS[t].cov.push(q.id); });
+  });
+  LIST.forEach(function (t) { t.cov.sort(function (a, b) { return QS.indexOf(BYID[a]) - QS.indexOf(BYID[b]); }); });
+  LIST.sort(function (a, b) { return b.cov.length - a.cov.length; });
+
+  function icon(t, big) {
+    var cls = "ico" + (big ? " lg" : "");
+    var src = t.ic.indexOf("gh:") === 0 ? "https://github.com/" + t.ic.slice(3) + ".png?size=64" : LOGOS + t.ic;
+    return '<img class="' + cls + '" src="' + src + '" alt="" loading="lazy" data-l="' + esc(t.n.charAt(0)) + '">';
+  }
+  // Иконка не загрузилась — первая буква названия
+  document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (img.tagName !== "IMG" || !img.classList.contains("ico")) return;
+    var s = document.createElement("span");
+    s.className = img.className;
+    s.setAttribute("aria-hidden", "true");
+    s.textContent = img.dataset.l;
+    img.replaceWith(s);
+  }, true);
+  var OTHER_NOTE = "утилиты, которыми продукты связаны между собой";
+  function host(url) { return url.replace(/^https?:\/\/(www\.)?/, "").replace(/[/?#].*$/, ""); }
+  function altLink(a) { return '<a href="' + (a.u || LS + a.ls) + '" target="_blank" rel="noopener">' + esc(a.n) + '</a>'; }
+  function covLinks(ids) {
+    return ids.map(function (id) { return '<a href="index.html#q-' + id + '" title="' + esc(BYID[id].s) + '">' + BYID[id].num + '</a>'; }).join("");
+  }
+  function plural(n, a, b, c) { var m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; }
+
+  // ── Пирамида: сверху ИИ-агент, ниже три яруса по числу закрываемых практик ──
+  // Плашка тем крупнее, чем больше практик держит продукт: основание должно читаться сильнее вершины
+  var BANDS = [
+    { title: "Точечные", sub: "до 3 практик", min: 1 },
+    { title: "Опора", sub: "4–6 практик", min: 4 },
+    { title: "Основа", sub: "7 практик и больше", min: 7 }
+  ];
+  var bandOf = function (t) { for (var i = BANDS.length - 1; i >= 0; i--) if (t.cov.length >= BANDS[i].min) return i; return 0; };
+  // Прочее — утилиты, которыми продукты связаны между собой: в ярусы не входят, идут отдельной строкой под пирамидой
+  var MAIN = LIST.filter(function (t) { return t.g !== "other"; }), OTHER = LIST.filter(function (t) { return t.g === "other"; });
+  function chip(t, s) {
+    return '<button type="button" class="ch k-' + t.k + '" data-id="' + t.id + '" style="--s:' + s + '" title="' + esc(t.n + " — " + t.d) + '">' +
+      icon(t) + '<span class="nm">' + esc(t.n) + '</span><span class="cv">' + t.cov.length + '</span></button>';
+  }
+  var tiers = [{ title: "ИИ-агент", sub: "работает с продуктами через MCP", agent: true, list: MAIN.filter(function (t) { return t.k === "a"; }) }]
+    .concat(BANDS.map(function (b, i) {
+      return { title: b.title, sub: b.sub, list: MAIN.filter(function (t) { return t.k !== "a" && bandOf(t) === i; }) };
+    })).filter(function (tr) { return tr.list.length; });
+  $("pyr").innerHTML = tiers.map(function (tr, i) {
+    return '<div class="tier' + (tr.agent ? ' agent' : '') + '" style="--tone:' + (8 + 8 * i) + '%"><div class="tl"><b>' + tr.title + '</b>' + tr.sub + '</div><div class="chs">' +
+      tr.list.map(function (t) { return chip(t, Math.round((0.95 + 0.06 * t.cov.length) * 100) / 100); }).join("") + '</div></div>';
+  }).join("");
+  $("other").innerHTML = OTHER.length ? 'Прочее: ' + OTHER.map(function (t) {
+    return '<a href="#t-' + t.id + '" title="' + esc(t.d) + '">' + esc(t.n) + '</a>';
+  }).join(", ") : '';
+
+  // Пирамида: ширина растёт линейно от вершины (APEX от ширины) к основанию. Содержимое яруса не шире его
+  // верхней кромки, а высота яруса зависит от ширины — поэтому раскладка повторяется, пока высота не устоится
+  var APEX = 0.2, MIN_APEX = 150, PAD = 28;
+  function layoutPyramid() {
+    var pyr = $("pyr"), W = pyr.clientWidth, top = Math.max(W * APEX, Math.min(MIN_APEX, W));
+    var list = [].slice.call(pyr.children), H = pyr.offsetHeight;
+    var width = function (y) { return top + (W - top) * y / H; };
+    for (var it = 0; it < 6; it++) {
+      list.forEach(function (t) {
+        var w = Math.max(60, width(t.offsetTop) - 2 * PAD) + "px";
+        t.firstChild.style.maxWidth = w;
+        t.lastChild.style.maxWidth = w;
+      });
+      var h = pyr.offsetHeight;
+      if (Math.abs(h - H) < 1) break;
+      H = h;
+    }
+    list.forEach(function (t) {
+      var x0 = (W - width(t.offsetTop)) / 2, x1 = (W - width(t.offsetTop + t.offsetHeight)) / 2;
+      t.style.clipPath = "polygon(" + x0 + "px 0, " + (W - x0) + "px 0, " + (W - x1) + "px 100%, " + x1 + "px 100%)";
+    });
+  }
+  layoutPyramid();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutPyramid);
+  // Наклон зависит от ширины блока: перестраиваем, когда она меняется (окно, панель, поворот телефона).
+  // Высота меняется и от самой раскладки — на неё не реагируем, иначе раскладка зациклится
+  var lastW = $("pyr").clientWidth;
+  var relayout = function () {
+    var w = $("pyr").clientWidth;
+    if (w !== lastW) { lastW = w; layoutPyramid(); }
+  };
+  if (window.ResizeObserver) new ResizeObserver(relayout).observe($("pyr"));
+  else window.addEventListener("resize", relayout);
+
+  // ── Таблица ──
+  function row(t) {
+    return '<tr id="t-' + t.id + '" class="k-' + t.k + '">' +
+      '<td><div class="tool">' + icon(t, true) + '<a class="nm" href="' + t.site + '" target="_blank" rel="noopener">' + esc(t.n) + '</a>' +
+        '<p class="ds">' + esc(t.d) + '</p>' +
+        (t.parts ? '<p class="parts">В составе: ' + t.parts.map(altLink).join(", ") + '</p>' : '') +
+        (t.models ? '<p class="parts">Модели: ' + altLink(t.models[0]) + ' — основная; аналоги: ' + t.models.slice(1).map(altLink).join(", ") + '</p>' : '') +
+        '<p class="lnk"><a href="' + t.site + '" target="_blank" rel="noopener">' + esc(host(t.site)) + '</a></p></div></td>' +
+      '<td data-h="Тип"><span class="kind">' + KNAME[t.k] + '</span></td>' +
+      '<td class="cnt" data-h="Практик">' + t.cov.length + '</td>' +
+      '<td data-h="Закрывает"><div class="covs">' + covLinks(t.cov) + '</div></td>' +
+      '<td class="alts" data-h="Аналоги">' + (t.alt ? t.alt.map(altLink).join(", ") : "—") + '</td>' +
+      '<td class="lic" data-h="Лицензия">' + esc(t.lic) + '</td></tr>';
+  }
+  $("rows").innerHTML = MAIN.map(row).join("") +
+    (OTHER.length ? '<tr class="sep"><td colspan="6">Прочее — ' + OTHER_NOTE + '</td></tr>' + OTHER.map(row).join("") : "");
+
+  // Переход из пирамиды к строке таблицы
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  $("pyrcard").addEventListener("click", function (e) {
+    var b = e.target.closest(".ch");
+    if (!b) return;
+    var row = $("t-" + b.dataset.id);
+    if (row.hidden) return;
+    row.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    row.classList.remove("flash");
+    void row.offsetWidth;
+    row.classList.add("flash");
+    setTimeout(function () { row.classList.remove("flash"); }, 1800);
+  });
+})();
+</script>
+
+</body>
+</html>
