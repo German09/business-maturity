@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Дорожная карта карты зрелости бизнес-решений на 1С: шаги и сроки пути до цели в зависимости от команды и её ролей.">
+<title>Дорожная карта зрелости</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: сводка и схема этапов сверху; ниже две колонки — дорожная карта слева, команда справа (липкая). На узком экране всё в одну колонку. */
+:root {
+  --bg: #F3F5F3;
+  --surface: #FFFFFF;
+  --ink: #15211D;
+  --muted: #5A6A63;
+  --line: #D3DBD7;
+  --route: #0E7A66;
+  --route-soft: #D5EEE7;
+  --target: #B05E08;
+  --target-soft: #F7E5CF;
+  --warn: #A23B1F;
+  --warn-soft: #F7E0D8;
+  --ref: #3557B8;
+  --ref-soft: #E2E8F8;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+    --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+    --warn: #E5826A; --warn-soft: #3A1F18; --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #151D1A; --ink: #E3EAE6; --muted: #93A39C; --line: #2A3632;
+  --route: #3FC2A5; --route-soft: #163530; --target: #E59A45; --target-soft: #3A2A17;
+  --warn: #E5826A; --warn-soft: #3A1F18; --ref: #93AEF2; --ref-soft: #1E2944; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.page {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 56px;
+  display: grid; gap: 28px;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+a { color: var(--ref); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; border-radius: 4px; }
+
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.head { display: grid; gap: 12px; max-width: 75ch; }
+.head h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -.01em; }
+.lead { color: var(--muted); font-size: 16px; }
+.back { font-size: 14px; }
+
+/* ── Сводка ── */
+.route { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 24px; min-width: 0; }
+.summary { display: flex; flex-wrap: wrap; gap: 12px 40px; align-items: baseline; }
+.fact { display: grid; gap: 2px; min-width: 0; }
+.fact .k { font-size: 13px; color: var(--muted); }
+.fact .v { font-family: var(--font-display); font-weight: 500; font-size: 20px; line-height: 1.2; }
+.fact .v small { font-family: var(--font-body); font-size: 14px; color: var(--muted); font-weight: 400; }
+.fact.now .v { color: var(--route); }
+.fact.goal .v { color: var(--target); }
+.stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.st { position: relative; min-width: 0; }
+.st::before {
+  content: ""; position: absolute; top: 9px; left: 50%; width: 100%; height: 4px;
+  background: var(--line); border-radius: 2px;
+}
+.st:last-child::before { display: none; }
+.st.passed::before { background: var(--route); }
+.st.planned::before { background: repeating-linear-gradient(90deg, var(--target) 0 10px, transparent 10px 16px); }
+.st button {
+  position: relative; width: 100%; background: none; border: 0; padding: 0 6px; cursor: pointer;
+  display: grid; justify-items: center; text-align: center; gap: 6px;
+}
+.dot {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--surface);
+  border: 4px solid var(--line); box-sizing: border-box;
+}
+.st.passed .dot, .st.here .dot { border-color: var(--route); }
+.st.here .dot { background: var(--route); box-shadow: 0 0 0 5px var(--route-soft); }
+.st.planned .dot, .st.goal .dot { border-color: var(--target); }
+.st.goal .dot { background: var(--target); box-shadow: 0 0 0 5px var(--target-soft); }
+.st .code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
+.st .name { font-weight: 600; font-size: 15px; line-height: 1.25; }
+.st .desc { font-size: 12.5px; color: var(--muted); line-height: 1.35; max-width: 22ch; }
+.st button:hover .name { color: var(--target); }
+.meter { width: 70%; max-width: 110px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--route); }
+.pct { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; min-height: 22px; }
+.chip { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.here { background: var(--route); color: var(--surface); }
+.chip.goal { background: var(--target); color: var(--surface); }
+/* Широкий экран: этапы в общей сетке, поэтому заголовки, прогресс и описания стоят на одних строках, сколько бы строк ни занял заголовок */
+@media (min-width: 1001px) {
+  .stations { grid-template-rows: repeat(7, auto); }
+  .st { grid-row: span 7; display: grid; grid-template-rows: subgrid; }
+  .st button { grid-row: span 7; grid-template-rows: subgrid; }
+  .st .name { grid-row: 4; }
+  .st .meter { grid-row: 5; }
+  .st .pct { grid-row: 6; }
+  .st .desc { grid-row: 7; }
+}
+.route .hint { font-size: 13px; color: var(--muted); }
+.route .hint b { color: var(--target); font-weight: 600; }
+.sample {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  background: var(--target-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px;
+}
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+}
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Рабочая зона ── */
+.work { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 28px; align-items: start; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label, .field .lbl { font-size: 13px; color: var(--muted); }
+.team {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 12px; min-width: 0;
+}
+.team-head { display: grid; gap: 2px; }
+.team-head h2 { font-size: 16px; font-weight: 600; }
+.team-head p { font-size: 13px; color: var(--muted); }
+.hours input {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 160px; font-variant-numeric: tabular-nums;
+}
+.hint-s { font-size: 12.5px; color: var(--muted); }
+.roles { display: grid; gap: 0; }
+.role { display: grid; gap: 6px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.role-name { font-size: 14px; font-weight: 500; }
+.role-name small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
+.rchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.rchips .or { font-size: 12px; color: var(--muted); margin: 0 2px; }
+.rc {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 4px 10px; font-size: 13px; cursor: pointer; color: var(--ink);
+}
+.rc svg { width: 13px; height: 13px; flex: none; }
+.rc:hover:not(:disabled) { border-color: var(--ink); }
+.rc[aria-pressed="true"].sep { background: var(--route-soft); border-color: var(--route); color: var(--route); font-weight: 600; }
+.rc[aria-pressed="true"].by { background: var(--target-soft); border-color: var(--target); color: var(--target); font-weight: 600; }
+.rc:disabled { opacity: .4; cursor: not-allowed; }
+.tlink { color: var(--ref); }
+.team { scroll-margin-top: 16px; }
+.ref { color: var(--ref); text-decoration: none; white-space: nowrap; }
+.ref b { font-family: var(--font-mono); font-size: .9em; font-weight: 400; margin-right: 1px; font-variant-numeric: tabular-nums; }
+.ref:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Дорожная карта ── */
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 18px; min-width: 0; }
+.plan-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.plan h2 { font-family: var(--font-display); font-weight: 500; font-size: 20px; }
+.total { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.alert { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--warn-soft); color: var(--ink); }
+.alert b { color: var(--warn); }
+.alert.calm { background: var(--route-soft); }
+.alert.calm b { color: var(--route); }
+
+.gantt { display: grid; gap: 6px; }
+.g-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; }
+.g-label { font-size: 12.5px; line-height: 1.25; min-width: 0; }
+.g-label .w { display: block; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.g-track { position: relative; height: 18px; background: var(--bg); border-radius: 4px; }
+.g-bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--route); min-width: 4px; }
+.g-bar.est { background: repeating-linear-gradient(135deg, var(--route) 0 6px, var(--route-soft) 6px 10px); }
+.g-bar.hand { background: none; border: 2px dashed var(--target); }
+.g-axis { position: relative; height: 18px; margin-left: 160px; }
+.g-axis span {
+  position: absolute; top: 0; transform: translateX(-50%); font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.g-axis span::before { content: ""; position: absolute; left: 50%; top: -6px; height: 5px; border-left: 1px solid var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.legend .l-firm { background: var(--route); }
+.legend .l-est { background: repeating-linear-gradient(135deg, var(--route) 0 4px, var(--route-soft) 4px 7px); }
+.legend .l-hand { border: 2px dashed var(--target); }
+
+.steps { display: grid; gap: 12px; }
+.step { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 6px; }
+.step-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.step h3 { font-size: 15px; font-weight: 600; }
+.step h3 .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-right: 6px; }
+.step .dur { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.step .dur em { font-style: normal; color: var(--muted); font-family: var(--font-body); font-size: 11.5px; margin-left: 4px; }
+.step .about { font-size: 13.5px; color: var(--muted); }
+.step .aihelp b { color: var(--ref); font-weight: 600; }
+.tasks { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.tasks li { font-size: 13.5px; padding-left: 18px; position: relative; }
+.tasks li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 8px; height: 8px; border-radius: 2px; border: 2px solid var(--route); }
+.tasks li.tail::before { border-color: var(--target); }
+.tasks .tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-left: 4px; }
+.copied { font-size: 13px; color: var(--route); }
+.tool { color: var(--ref); text-decoration: none; }
+.tool:hover { text-decoration: underline; text-underline-offset: 2px; }
+.talt { color: var(--muted); }
+.ttools { font-size: 12.5px; color: var(--muted); }
+.ttools::before { content: "· "; }
+.foot { font-size: 13px; color: var(--muted); max-width: 80ch; display: grid; gap: 6px; }
+
+@media (max-width: 1000px) {
+  .stations { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .st::before { top: 22px; left: 9px; width: 4px; height: 100%; }
+  .st.planned::before { background: repeating-linear-gradient(180deg, var(--target) 0 10px, transparent 10px 16px); }
+  .st button {
+    grid-template-columns: 22px minmax(0, 1fr) auto; justify-items: start; text-align: left;
+    column-gap: 12px; row-gap: 2px; padding: 0 0 18px 0; align-items: start;
+  }
+  .dot { grid-row: 1 / span 4; }
+  .st .code { margin-top: 2px; grid-column: 2; }
+  .st .name, .st .desc { grid-column: 2; max-width: none; }
+  .chips { grid-column: 3; grid-row: 1 / span 2; justify-content: end; }
+  .st .meter { grid-column: 2; width: 100%; max-width: 160px; margin-top: 4px; }
+  .st .pct { grid-column: 2; }
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .team { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 720px) {
+  .route { padding: 18px 16px; }
+  .plan { padding: 16px; }
+  .g-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .g-axis { margin-left: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .g-bar, .meter i { transition: left .3s ease, width .3s ease; }
+  .dot { transition: background .2s, border-color .2s, box-shadow .2s; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="head">
+    <p class="eyebrow">Карта зрелости бизнес-решений на 1С</p>
+    <h1>Дорожная карта</h1>
+    <p class="lead">Шаги и сроки пути от текущего этапа до цели. Этап считается по ответам анкеты на карте зрелости, сроки уточняются по команде: сколько часов она отрабатывает и какие роли совмещаются.</p>
+    <p class="back"><a href="index.html">← К карте зрелости</a></p>
+  </header>
+
+  <section class="route" aria-label="Сводка и цель">
+    <div class="summary" id="summary"></div>
+    <ol class="stations" id="stations"></ol>
+    <p class="hint"><b>Цель выбирается на схеме:</b> нажмите на этап, до которого хотите дойти.</p>
+    <div class="sample" id="sampleNote">
+      <span>Показан пример ответов типичной команды. Замените их на свои в анкете.</span>
+      <a class="btn" href="index.html">Заполнить анкету</a>
+    </div>
+  </section>
+
+  <div class="work">
+    <section class="plan" aria-label="Дорожная карта">
+      <div class="plan-head">
+        <h2>Дорожная карта</h2>
+        <span class="total" id="total"></span>
+      </div>
+      <div id="alerts" class="steps"></div>
+      <div class="gantt" id="gantt"></div>
+      <div class="legend">
+        <span><i class="l-firm"></i>срок по методике</span>
+        <span><i class="l-est"></i>ориентировочный срок</span>
+        <span><i class="l-hand"></i>передача и сопровождение</span>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div class="btn-row">
+        <button class="btn primary" id="copyBtn" type="button">Скопировать дорожную карту</button>
+        <span class="copied" id="copied" aria-live="polite"></span>
+      </div>
+      <textarea id="copyFallback" hidden readonly rows="8" style="width:100%;font:13px var(--font-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px"></textarea>
+    </section>
+
+      <aside class="team" id="team" aria-label="Команда">
+        <div class="team-head">
+          <h2>Команда</h2>
+          <p>Важно не число людей, а какие роли закрыты отдельным человеком, а какие кто-то совмещает, и сколько часов команда отрабатывает в месяц. Это уточняет сроки дорожной карты.</p>
+        </div>
+        <div class="field hours">
+          <label for="hours">Трудозатраты команды, часов в месяц</label>
+          <input type="number" id="hours" min="0" step="50" inputmode="numeric">
+          <span class="hint-s" id="hoursHint"></span>
+        </div>
+        <div class="roles" id="roles"></div>
+      </div>
+  </div>
+
+  <footer class="foot">
+    <p>Срок аудита (2–4 недели) задан методикой, подготовка базы занимает по ней 4–8 недель, плюс 1–2 недели, если базовых инструментов ещё нет. Сроки следующих шагов ориентировочные: они зависят от того, сколько уже сделано, от объёма команды в часах и от того, какие роли в ней совмещаются, и уточняются на аудите.</p>
+    <p>Ответы хранятся только в браузере и общие с картой зрелости: что меняется здесь, видно и там.</p>
+  </footer>
+</div>
+
+<script src="model.js"></script>
+<script src="plan.js"></script>
+<script>
+(function () {
+  var LEVELS = BM.LEVELS, QS = BM.QS, TOOLS = BM.TOOLS;
+  var P = BM.plan, BYID = P.BYID, ROLES = P.ROLES, ROLE_BY_ID = P.ROLE_BY_ID, PERSON = P.PERSON;
+  var roleOf = P.roleOf, roleText = P.roleText, esc = P.esc, pct = P.pct, ref = P.ref, names = P.names, toolLinks = P.toolLinks;
+  var share = P.share, lowerFirst = P.lowerFirst, weeks = P.weeks, months = P.months;
+  var APPLY = P.APPLY, CONTROL = P.CONTROL, BALANCE_GAP = P.BALANCE_GAP;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function taskTools(t) {
+    if (!t.id) return [];
+    var q = BYID[t.id];
+    return t.step !== undefined ? q.steps[t.step].tools : q.tools;
+  }
+  function taskText(t) {
+    return t.done > 0 && t.done < 1 && !t.tail
+      ? "Доделать (сейчас " + pct(t.done) + "): " + lowerFirst(t.text)
+      : t.text;
+  }
+
+  // ── Команда ──
+  function buildRoles() {
+    $("roles").innerHTML = ROLES.map(function (r) {
+      var by = Object.keys(r.by).map(function (c) {
+        return '<button type="button" class="rc by" data-role="' + r.id + '" data-val="' + c + '">' + ROLE_BY_ID[c].sh + '</button>';
+      }).join("");
+      return '<div class="role" role="group" aria-label="' + r.l + '"><div class="role-name">' + r.l + '<small>' + r.h + '</small></div>' +
+        '<div class="rchips"><button type="button" class="rc sep" data-role="' + r.id + '" data-val="sep">' + PERSON + 'отдельный человек</button>' +
+        '<span class="or">или совмещает</span>' + by + '</div></div>';
+    }).join("");
+  }
+  function refreshRoles() {
+    $("roles").querySelectorAll("button.rc").forEach(function (b) {
+      var role = b.dataset.role, val = b.dataset.val;
+      b.setAttribute("aria-pressed", String(roleOf(role) === val));
+      // Нельзя выбрать роль, которую саму совмещает эта: получился бы круг
+      b.disabled = val !== "sep" && val !== "dev" && roleOf(val) === role;
+    });
+  }
+
+  function syncControls() {
+    $("hours").value = P.state.hours || "";
+    refreshRoles();
+    $("sampleNote").hidden = !P.state.sample;
+  }
+
+  function render() {
+    var R = P.compute(), tMin = R.tMin, tMax = R.tMax;
+    var done = R.target <= R.current;
+    var bal = { apply: share(APPLY, R.eff), control: share(CONTROL, R.eff) };
+    bal.gap = bal.apply - bal.control;
+
+    $("stations").innerHTML = P.stationsHtml(R);
+
+    // Сводка
+    $("summary").innerHTML =
+      '<div class="fact now"><span class="k">Вы здесь</span><span class="v">Этап ' + R.current + ' · ' + LEVELS[R.current].name + '</span></div>' +
+      '<div class="fact goal"><span class="k">Цель</span><span class="v">Этап ' + R.target + ' · ' + LEVELS[R.target].name + '</span></div>' +
+      '<div class="fact"><span class="k">Общая зрелость</span><span class="v">' + R.index + ' <small>из 100 баллов</small></span></div>' +
+      '<div class="fact"><span class="k">Путь</span><span class="v">' + (R.target === 0 ? "Стартовая точка" : done ? "Цель достигнута" : weeks(tMin, tMax) + ' <small>' + months(tMin, tMax) + '</small>') + '</span></div>';
+
+    // Предупреждения
+    var al = "";
+    if (R.aheadAI) {
+      al += '<div class="alert"><b>ИИ раньше процесса.</b> Агент уже правит конфигурацию, но нет конвейера и ревью. Без них эффект не закрепится: сначала стабилизируем процесс, затем подключаем ИИ.</div>';
+    } else if (R.ahead.length) {
+      al += '<div class="alert"><b>Практики через этап.</b> Часть практик этапа ' + R.ahead.join(", ") + ' уже есть, но предыдущие этапы не закрыты. Их учтём в сроках.</div>';
+    }
+    var gapIds = QS.filter(function (q) {
+      return R.miss[q.id].length || (q.steps && Object.keys(R.stepMiss[q.id]).length);
+    }).map(function (q) { return q.id; });
+    if (gapIds.length) {
+      al += '<div class="alert"><b>Не выполнены требования.</b> Отмечены практики, которые опираются на ещё не сделанное: ' + names(gapIds) +
+        '. Ответы засчитаны как есть; проверьте их и начните путь с недостающего.</div>';
+    }
+    if (R.target >= 6 && R.current < 5 && !done) {
+      al += '<div class="alert calm"><b>Путь через все этапы.</b> ИИ подключаем, когда процесс работает стабильно, поэтому маршрут проходит через этапы ' + (R.current + 1) + '–5.</div>';
+    }
+    if (R.target === 0) {
+      al += '<div class="alert calm"><b>Этап 0 — стартовая точка.</b> С него начинает команда без инструментов, правил и автоматизации. Выберите на схеме этап 1–7, чтобы увидеть путь к нему.</div>';
+    } else if (done) {
+      al += '<div class="alert calm"><b>Цель уже достигнута.</b> Выберите на схеме следующий этап, чтобы увидеть путь к нему.</div>';
+    }
+    var rolesNot = ROLES.filter(function (r) { return roleOf(r.id) !== "sep"; });
+    if (rolesNot.length && !done && R.target !== 0) {
+      al += '<div class="alert"><b>Совмещённые роли:</b> ' + rolesNot.map(function (r) {
+        return r.sh + ' — ' + roleText(r.id);
+      }).join(", ") + '. Сроки связанных шагов увеличены, а эта работа ляжет на тех, кто совмещает. <a class="tlink" href="#team">Уточнить роли</a></div>';
+    }
+    if (bal.apply > 0 && bal.gap > BALANCE_GAP) {
+      al = '<div class="alert"><b>ИИ опережает управляемость.</b> Эффект от ИИ — ' + bal.apply + '%, а управляемость — ' + bal.control +
+        '%. Люди перестают успевать проверять, что он меняет, и бизнес-решение теряет управляемость. Подтяните ' + ref("archctl") + ', ' + ref("review") + ' и ' + ref("tests") + '.</div>' + al;
+    }
+    $("alerts").innerHTML = al;
+    var h = Number(P.state.hours) || 0;
+    $("hoursHint").textContent = h ? "≈ " + String(Math.round(h / 164 * 10) / 10).replace(".", ",") + " человек на полную ставку" : "Укажите, чтобы точнее оценить сроки раскатки";
+    $("total").textContent = done ? "" : "итого " + weeks(tMin, tMax);
+
+    // Диаграмма: позиции по средней оценке, подписи — диапазоны
+    var mids = R.steps.map(function (s) { return (s.min + s.max) / 2; });
+    var span = mids.reduce(function (a, b) { return a + b; }, 0);
+    var hand = R.steps.length ? Math.max(4, span * 0.25) : 0;
+    var full = span + hand || 1;
+    var x = 0, gh = "";
+    R.steps.forEach(function (s, i) {
+      var left = x / full * 100, w = mids[i] / full * 100;
+      gh += '<div class="g-row"><div class="g-label">Шаг ' + s.n + ' · ' + s.title + '<span class="w">' + weeks(s.min, s.max) + '</span></div>' +
+        '<div class="g-track"><div class="g-bar' + (s.firm ? '' : ' est') + '" style="left:' + left + '%;width:' + w + '%"></div></div></div>';
+      x += mids[i];
+    });
+    if (R.steps.length) {
+      var hl = Math.max(0, (span - mids[mids.length - 1]) / full * 100);
+      gh += '<div class="g-row"><div class="g-label">Передача и сопровождение<span class="w">до закрепления</span></div>' +
+        '<div class="g-track"><div class="g-bar hand" style="left:' + hl + '%;width:' + (100 - hl) + '%"></div></div></div>';
+      var ticks = "", step = full > 40 ? 2 : 1;
+      for (var mth = step; mth * 4.35 < full; mth += step) {
+        var pos = mth * 4.35 / full * 100;
+        if (pos > 96) break;
+        ticks += '<span style="left:' + pos + '%">' + mth + ' мес</span>';
+      }
+      gh += '<div class="g-axis" aria-hidden="true">' + ticks + '</div>';
+    }
+    $("gantt").innerHTML = gh;
+
+    // Карточки шагов
+    var sh = R.steps.map(function (s) {
+      var tasks = s.tasks.length ? '<ul class="tasks">' + s.tasks.map(function (t) {
+        var partial = t.done > 0 && t.done < 1;
+        var tt = taskTools(t);
+        return '<li class="' + (t.tail || partial ? 'tail' : '') + '">' + (t.id ? ref(t.id, t.step, true) + ' ' : '') + esc(taskText(t)) +
+          (tt.length ? ' <span class="ttools">' + toolLinks(tt) + '</span>' : '') + '</li>';
+      }).join("") + '</ul>' : '<p class="about">Практики шага уже есть, остаётся закрепить их на реальных задачах.</p>';
+      return '<div class="step"><div class="step-head"><h3><span class="n">Шаг ' + s.n + '</span>' + s.title + '</h3>' +
+        '<span class="dur">' + weeks(s.min, s.max) + (s.firm ? '' : '<em>оценка</em>') + '</span></div>' +
+        '<p class="about">' + s.about + '</p>' +
+        (s.ai ? '<p class="about aihelp"><b>С помощью ИИ:</b> ' + s.ai + '.</p>' : '') +
+        (s.roleWhy && s.roleWhy.length ? '<p class="about">Срок увеличен: ' + esc(s.roleWhy.join(", ")) + '.</p>' : '') + tasks + '</div>';
+    }).join("");
+    if (R.steps.length) {
+      sh += '<div class="step"><div class="step-head"><h3><span class="n">Далее</span>Передача и сопровождение</h3><span class="dur">до закрепления</span></div>' +
+        '<p class="about">Обучаем разработчиков и специалистов сопровождения, документируем процесс и постепенно сокращаем своё участие, чтобы практики остались в команде.</p></div>';
+    }
+    $("steps").innerHTML = sh;
+
+    render.last = { R: R, tMin: tMin, tMax: tMax };
+  }
+
+  function summaryText() {
+    var d = render.last, R = d.R;
+    var lines = ["Карта зрелости бизнес-решений", "",
+      "Сейчас: этап " + R.current + " · " + LEVELS[R.current].name,
+      "Цель: этап " + R.target + " · " + LEVELS[R.target].name,
+      "Общая зрелость: " + R.index + " из 100 баллов",
+      "Команда: " + (P.state.hours ? P.state.hours + " ч/мес; " : "") + ROLES.map(function (r) {
+        return r.sh + " — " + roleText(r.id);
+      }).join("; ")];
+    if (!R.steps.length) { lines.push("Цель уже достигнута."); return lines.join("\n"); }
+    lines.push("Срок: " + weeks(d.tMin, d.tMax) + " (" + months(d.tMin, d.tMax) + ")", "");
+    R.steps.forEach(function (s) {
+      lines.push("Шаг " + s.n + ". " + s.title + " — " + weeks(s.min, s.max) + (s.firm ? "" : " (оценка)"));
+      s.tasks.forEach(function (t) {
+        var num = t.id ? "[" + BYID[t.id].num + (t.step !== undefined ? ", шаг " + t.step : "") + "] " : "";
+        var tt = taskTools(t);
+        lines.push("  • " + num + taskText(t) + (tt.length ? " (" + tt.map(function (id) { return TOOLS[id].n; }).join(", ") + ")" : ""));
+      });
+    });
+    lines.push("Далее: передача и сопровождение до закрепления результата.");
+    return lines.join("\n");
+  }
+
+  // ── События ──
+  $("stations").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-lv]");
+    if (!b) return;
+    P.state.target = Number(b.dataset.lv);
+    P.save(); render();
+  });
+  $("hours").addEventListener("input", function () { P.state.hours = Math.max(0, Number(this.value) || 0); P.save(); render(); });
+  $("roles").addEventListener("click", function (e) {
+    var b = e.target.closest("button.rc");
+    if (!b || b.disabled) return;
+    P.state.roles = P.state.roles || {};
+    P.state.roles[b.dataset.role] = b.dataset.val;
+    P.save(); refreshRoles(); render();
+  });
+  $("copyBtn").addEventListener("click", function () {
+    var text = summaryText(), fb = $("copyFallback");
+    var ok = function () { $("copied").textContent = "Скопировано"; fb.hidden = true; setTimeout(function () { $("copied").textContent = ""; }, 2500); };
+    var fail = function () { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); $("copied").textContent = "Выделите текст и скопируйте"; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fail);
+      else fail();
+    } catch (err) { fail(); }
+  });
+  P.onOutsideChange(function () { syncControls(); render(); });
+
+  buildRoles();
+  syncControls();
+  render();
+})();
+</script>
+
+</body>
+</html>
